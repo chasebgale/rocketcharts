@@ -1,15 +1,3 @@
-/*
-
-IDEAS
-
-1. Have an initializer that accepts a DIV element. Then you can add CANVAS elements to the div
-dynamically with jquery, treating each CANVAS like it's own FinancialChartPanel! BRILLIANT! /beercommercial
-
-2. Use jQueryUI windows to configure/add indicators/etc... when window to add indicator pops up, add indicator immediately to chart,
-change the indicator type in real time, adjust colors, etc
-
-*/
-
 
 function rocketchart() {
 	this.panels = new Array();
