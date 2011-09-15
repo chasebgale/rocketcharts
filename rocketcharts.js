@@ -6,11 +6,19 @@ function rocketchart() {
 	this.indicators = [{name: 'Simple Moving Average', id: 'simplemovingaverage'},
 					   {name: 'Weighted Moving Average', id: 'weightedmovingaverage'}]
 					   
+	this.priceAxisWidth = 75;
+					   
 	var settings = new Object();
 	settings.minimumPanelHeight = 200; 
 	settings.defaultUpColor = "#00EAFF";
 	settings.defaultDownColor = "#005F6B";
 	this.settings = settings;
+	
+	var view = new Object();
+	view.horizontalPixelsPerPoint = 0;
+	view.startingPoint = 0;
+	view.visiblePoints = -1;
+	this.view = view;
 	
 	this.initComplete = function() {};
 	
@@ -21,10 +29,14 @@ rocketchart.prototype.init = function(element, settings){
 		
 	// store global variable after looking it up with jquery
 	this.element = $(element);
+	this.width = this.element.width();
 	
-	this.element.css("overflow", "auto");
-	this.element.css("margin", "0px");
-	this.element.css("padding", "0px");
+	this.element.append("<div id=\"panels\" style=\"height: 100%; width: " + this.width + "px;\"></div>");
+	var panelsElement = $("#panels");
+	
+	panelsElement.css("overflow", "auto");
+	panelsElement.css("margin", "0px");
+	panelsElement.css("padding", "0px");
 	
 	this.element.bind( "resize", function(event, ui) {
 		rocketcharts.resize(ui.size.width, ui.size.height);
@@ -52,6 +64,13 @@ rocketchart.prototype.init = function(element, settings){
 		// Add our windows for chart management:
 		GenerateDialogs(this.element, this.indicators);
 	}
+	
+	// Experimental: Floating Date Axis
+	this.element.append("<div style=\"height: 15px; width: " + this.width + "px;\">" +
+							"<canvas id=\"dateAxisCanvas\" width=\"" + this.width + "\" height=\"15\"></canvas>" +
+						"</div>");
+	
+	this.dateAxisCanvas = document.getElementById("dateAxisCanvas");
 	
 	// Experimental: Raster Text
 	this.element.append("<canvas id=\"bufferCanvas\" width=\"600\" height=\"10\" style=\"display: none;\"></canvas>");
@@ -100,10 +119,9 @@ rocketchart.prototype.init = function(element, settings){
 		$(rocketcharts).trigger('initComplete');
 		
 	};
+
 	fontImage.src = "bitmapfont.png";
-	
-	
-	
+
 };
 
 rocketchart.prototype.resize = function(w, h){
@@ -137,8 +155,10 @@ rocketchart.prototype.addPanel = function(){
 		actualHeight = this.settings.minimumPanelHeight;
 	}
 	
+	var panelsElement = $("#panels");
 	
-	this.element.append('<canvas style="padding: 0px; margin: 0px;" id="panel' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
+	// this.element.append
+	panelsElement.append('<canvas style="padding: 0px; margin: 0px;" id="panel' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
 	this.panels[panelID] = new rocketpanel(document.getElementById("panel" + panelID), actualHeight);
 	
 	for (var i=0; i < this.panels.length; i++) {
@@ -222,29 +242,64 @@ rocketchart.prototype.addIndicator = function(id, params, series, panel){
 
 rocketchart.prototype.draw = function(){
 	
-	// reset size of canvas in case we are resizing
-	//$(element).attr("width", width);
-	//$(element).attr("height", height);
+	var height = 0;
 	
+	// Draw panels:
 	for (var i=0; i < this.panels.length; i++) {
 		
 		// grab the datacontext of the canvas
 		var context = this.panels[i]._canvas.getContext("2d");
 		
-		// read the width and height of the canvas
-		var width = parseInt(this.panels[i]._canvas.getAttribute("width"));
-		var height = parseInt(this.panels[i]._canvas.getAttribute("height"));
+		// read the height of the canvas
+		height = parseInt(this.panels[i]._canvas.getAttribute("height"));
 		
-		console.log("draw called, width: " + width + " height: " + height);
+		console.log("draw called, width: " + this.width + " height: " + height);
 		
 		// create a new pixel array
-		var imageData = context.createImageData(width, height);
+		var imageData = context.createImageData(this.width, height);
 		
-		this.panels[i].draw(imageData, width - 75);
+		this.panels[i].draw(imageData, this.width - this.priceAxisWidth);
 		
 		// copy the image data back onto the canvas
 		context.putImageData(imageData, 0, 0);
 	};
+	
+	// Draw date axis:
+	var context = this.dateAxisCanvas.getContext("2d");
+	var imageData = context.createImageData(this.width, 15);
+	var dateAxisWidth = this.width - this.priceAxisWidth;
+	
+	// For now displayedPoints = all ticks, in the future whatever zoom or view we have set
+	var displayedPoints = this.data[0].data.length; 
+	var horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
+	//var step = Math.floor(displayedPoints / Math.floor(dateAxisWidth / 150));
+	//var minorStep = Math.floor(step / 10); //Math.ceil(displayedPoints / (dateAxisWidth / 5));
+	
+	var minorStep = 4;
+	var majorStep = Math.ceil(150 / (minorStep * horizontalPixelsPerPoint));
+	
+	var k = 0;
+	var tickCount = 0;
+	
+	for (var i=1; i < displayedPoints; i++) {
+		
+		if (i % minorStep == 0) {
+			k = i * horizontalPixelsPerPoint;
+			line(imageData, k, 0, k, 1, 100, 100, 100, 0xFF);
+			tickCount++;
+			
+			if (tickCount % majorStep == 0) {
+				//k = i * horizontalPixelsPerPoint;
+				line(imageData, k, 0, k, 3, 255,255,255, 0xFF);
+				rasterText(imageData, this.data[0].data[i].date, k - 60, 6);
+			}
+		}
+		
+		
+		
+	};
+	
+	context.putImageData(imageData, 0, 0);
 
 };
 
@@ -355,7 +410,8 @@ rocketpanel.prototype.draw = function(imageData, w){
 	for (var i=1; i < 10; i++) {
 		yValue = this._canvas.height - (this._verticalPixelsPerPoint * (i * this._gridStep));
 		valueAtPoint = ((i * this._gridStep) - this._gridMin);
-		rasterText(imageData, valueAtPoint.toFixed(4), w + 5, yValue);
+		rasterText(imageData, valueAtPoint.toFixed(4), w + 5, yValue - 3);
+		line(imageData, w, yValue, w + 3, yValue, 255,255,255,0xFF);
 		
 		if ((i % 2) == 0) {
 			box(imageData, 0, yValue, w, oldY, 45, 45, 45, 0xFF);
@@ -377,28 +433,6 @@ rocketpanel.prototype.draw = function(imageData, w){
 	
 	
 };
-
-rocketpanel.prototype.drawAxisText = function(context, w) {
-	
-	context.fillStyle = "#CBCBCB";
-	context.strokeStyle = "#CBCBCB";
-	context.lineWidth   = 1;
-	context.font = "10px sans-serif";
-	
-	var valueAtPoint = 0;
-	var yValue = 0;
-	
-	for (var i=1; i < 10; i++) {
-		yValue = this._canvas.height - (this._verticalPixelsPerPoint * (i * this._gridStep));
-		valueAtPoint = ((i * this._gridStep) - this._gridMin);
-		context.fillText(valueAtPoint, w + 5, yValue + 3);
-		context.moveTo(w, yValue);
-  		context.lineTo(w + 3, yValue);
-	};
-	
-	
-	context.stroke();
-}
 
 rocketpanel.prototype.addSeries = function(series){
 	this._series[this._series.length] = series;
@@ -936,7 +970,7 @@ function GeneratePriceHistory(){
 				high: nHigh, 
 				low: nLow,
 				close: nClose,
-				date: dDate.toTimeString()//.format("mm/dd/yy hh:MM:ss TT")
+				date: dDate.format("mm/dd/yy hh:MM:ss TT")
 			};
 		
 		nOpen = nClose;
