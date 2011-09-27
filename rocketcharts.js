@@ -1056,8 +1056,12 @@ function randomInRange(minVal,maxVal)
 
 function GenerateDialogs(element, indicators) {
 	var addIndicatorDialog = "<div id=\"rocketcharts-addIndicator-dialog-form\" title=\"Add New Indicator\">" +
-		"<form>" +
-			"<fieldset>" +
+	"<div id=\"tabs\">" +
+	"<ul>" +
+		"<li><a href=\"#tabs-1\">Nuts & Bolts</a></li>" +
+		"<li><a href=\"#tabs-2\">Appearance</a></li>" +
+	"</ul>" +
+			"<div id=\"tabs-1\">" +
 				"<label for=\"rocketcharts-addIndicator-select\">Type:</label>" +
 				"<select id=\"rocketcharts-addIndicator-select\">";
 	
@@ -1075,18 +1079,27 @@ function GenerateDialogs(element, indicators) {
 	var indicator = new calc["simplemovingaverage"]();
 				
 	for (var i=0; i < indicator._params.length; i++) {
-	  addIndicatorDialog += "<label for=\"param" + i + "\">" + indicator._params[i].name + "</label>" +
-	  						"<input type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\" /><br />";
+	  addIndicatorDialog += "<label for=\"param" + i + "\">" + indicator._params[i].name + "</label>";
+	  
+	  switch (indicator._params[i].type) {
+	  	case "int":
+	  		addIndicatorDialog += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+	  		break;
+	  }
+	  
 	};
 
 		addIndicatorDialog += "</div>" +
+			"</div>" +
+			"<div id=\"tabs-2\">" +
 				"<label for=\"rocketcharts-panel-select\">Panel:</label>" +
 				"<select id=\"rocketcharts-panel-select\">" +
-			"</fieldset>" +
-		"</form>" +
+			"</div>" +
 		"</div>";
 		
 		$(element).prepend(addIndicatorDialog);
+		
+		$('.rocketcharts-input-int').spinner({ min: 0, max: 100, increment: 'fast' });
 		
 		$( "#rocketcharts-addIndicator-select" ).change(function(){
 			var calc = new rocketindicatorcalculations();
@@ -1096,11 +1109,20 @@ function GenerateDialogs(element, indicators) {
 			$( "#indicator-params" ).empty();
 			
 			for (var i=0; i < indicator._params.length; i++) {
-			  indicatorMarkup += "<label for=\"param" + i + "\">" + indicator._params[i].name + "</label>" +
-			  						"<input type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+			  indicatorMarkup += "<label for=\"param" + i + "\">" + indicator._params[i].name + "</label>";
+			  
+			  switch (indicator._params[i].type) {
+			  	case "int":
+			  		indicatorMarkup += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+			  		break;
+			  }
+			  						
 			};
 			
 			$( "#indicator-params" ).append(indicatorMarkup);
+			
+			$('.rocketcharts-input-int').spinner({ min: 0, max: 100, increment: 'fast' });
+			
 		});
 		
 		$( "#rocketcharts-addIndicator-dialog-form" ).dialog({
@@ -1150,6 +1172,8 @@ function GenerateDialogs(element, indicators) {
 				
 				$( "#rocketcharts-panel-select" ).append("<option value=\"-1\">New Panel</option>");
 				$( "#rocketcharts-panel-select" ).append(optionsMarkup);
+				
+				$('#tabs').tabs();
 			}
 		});
 }
