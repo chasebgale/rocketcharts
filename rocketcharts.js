@@ -27,6 +27,8 @@ function rocketchart() {
 	
 	this.initComplete = function() {};
 	
+	this.mouseDown = false;
+	
 	return true;
 }
 
@@ -48,8 +50,23 @@ rocketchart.prototype.init = function(element, settings){
 		rocketcharts.draw();
 	});
 	this.element.bind( "mousemove", function(event, ui) {
-		//rocketcharts.resize(ui.size.width, ui.size.height);
-		//rocketcharts.draw();
+		if (rocketcharts.mouseDown) {
+			rocketcharts.headsUpDisplay(event.offsetX, event.offsetY);
+			rocketcharts.draw();
+		}
+	});
+	this.element.bind("mousedown", function(event, ui) {
+		rocketcharts.mouseDown = true;
+		this.style.cursor = 'crosshair';
+		return false; // Prevents browser from changing cursor to 'I-Beam', thinking we are trying to select text
+	});
+	this.element.bind("mouseup", function(event, ui) {
+		if (rocketcharts.mouseDown) {
+			this.style.cursor = 'default';
+			rocketcharts.mouseDown = false;
+			rocketcharts.HUD = false;
+			rocketcharts.draw();
+		}
 	});
 	
 	// TODO: Instead of doing this, merge the settings argument with this.settings
@@ -145,6 +162,25 @@ rocketchart.prototype.resize = function(w, h){
 		this.panels[i]._canvas.setAttribute("width", w);
 		this.panels[i]._canvas.setAttribute("height", calcHeight);
 		
+	}
+}
+
+rocketchart.prototype.headsUpDisplay = function(x, y){
+	var dateAxisWidth = this.width - this.priceAxisWidth;
+	
+	// For now displayedPoints = all ticks, in the future whatever zoom or view we have set
+	var displayedPoints = this.data[0].data.length; 
+	var horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
+	
+	var point = -1;
+	
+	if (x > dateAxisWidth) {
+		// flag the removal of info box
+		this.HUD = false;
+	} else {
+		this.HUD = true;
+		point = Math.floor(x / horizontalPixelsPerPoint);
+		this.HUDPoint = point;
 	}
 }
 
@@ -443,7 +479,22 @@ rocketpanel.prototype.draw = function(imageData, w){
 		this._indicators[i].draw(imageData, this._verticalPixelsPerPoint, this._gridMin, w, this._height);
 	};
 	
-	
+	// Draw HUD
+	if (rocketcharts.HUD) {
+		var horizSpacing = w / rocketcharts.data[0].data.length;
+		var halfhorizSpacing = Math.round(horizSpacing / 2.0) - 1;
+		var x = (rocketcharts.HUDPoint * horizSpacing) + halfhorizSpacing;
+		line(imageData, x, 0, x, this._canvas.height, 255, 255, 255, 0xFF);
+		
+		if (this._series.length > 0) {
+			box(imageData, 10, 10, 210, 150, 0, 0, 0, 0xFF);
+			rasterText(imageData, "open:  " + this._series[0].data[rocketcharts.HUDPoint]["open"], 12, 12);
+			rasterText(imageData, "high:  " + this._series[0].data[rocketcharts.HUDPoint]["high"], 12, 27);
+			rasterText(imageData, "low:   " + this._series[0].data[rocketcharts.HUDPoint]["low"], 12, 42);
+			rasterText(imageData, "close: " + this._series[0].data[rocketcharts.HUDPoint]["close"], 12, 57);
+			rasterText(imageData, "date:  " + this._series[0].data[rocketcharts.HUDPoint]["date"], 12, 72);
+		}
+	}
 	
 };
 
