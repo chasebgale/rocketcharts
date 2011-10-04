@@ -1,8 +1,3 @@
-/****************************
-* 
-*****************************/
-
-
 function rocketchart() {
 	this.panels = new Array();
 	this.data = new Array();
@@ -27,8 +22,6 @@ function rocketchart() {
 	
 	this.initComplete = function() {};
 	
-	this.mouseDown = false;
-	
 	return true;
 }
 
@@ -49,24 +42,20 @@ rocketchart.prototype.init = function(element, settings){
 		rocketcharts.resize(ui.size.width, ui.size.height);
 		rocketcharts.draw();
 	});
-	this.element.bind( "mousemove", function(event, ui) {
-		if (rocketcharts.mouseDown) {
+	this.element.bind("mousedown", function(event, ui) {
+		$(this).bind( "mousemove", function(event, ui) {
 			rocketcharts.headsUpDisplay(event.offsetX, event.offsetY);
 			rocketcharts.draw();
-		}
-	});
-	this.element.bind("mousedown", function(event, ui) {
-		rocketcharts.mouseDown = true;
+		});
 		this.style.cursor = 'crosshair';
 		return false; // Prevents browser from changing cursor to 'I-Beam', thinking we are trying to select text
 	});
 	this.element.bind("mouseup", function(event, ui) {
-		if (rocketcharts.mouseDown) {
-			this.style.cursor = 'default';
-			rocketcharts.mouseDown = false;
-			rocketcharts.HUD = false;
-			rocketcharts.draw();
-		}
+		$(this).unbind( "mousemove" );
+		this.style.cursor = 'default';
+		rocketcharts.mouseDown = false;
+		rocketcharts.HUD = false;
+		rocketcharts.draw();
 	});
 	
 	// TODO: Instead of doing this, merge the settings argument with this.settings
@@ -247,7 +236,7 @@ rocketchart.prototype.addSeries = function(title, data, type, panel){
 	
 	// Keep track of all series data in a root array for quick lookups
 	this.data[this.data.length] = {title: title, data: data};
-	this.panels[panelID].addSeries(new rocketseries(this.data[this.data.length - 1].data, type));
+	this.panels[panelID].addSeries(new rocketseries(this.data[this.data.length - 1].data, type, title));
 	this.draw();
 };
 
@@ -468,32 +457,50 @@ rocketpanel.prototype.draw = function(imageData, w){
 		
 		oldY = yValue;
 	};
-
+	
+	var legendLines = new Array();
+	var legendPoint = rocketcharts.data[0].data.length - 1;
+	
+	// Draw HUD Line
+	if (rocketcharts.HUD) {
+		legendPoint = rocketcharts.HUDPoint;
+		var horizSpacing = w / rocketcharts.data[0].data.length;
+		var halfhorizSpacing = Math.round(horizSpacing / 2.0) - 1;
+		var x = (rocketcharts.HUDPoint * horizSpacing) + halfhorizSpacing;
+		line(imageData, x, 0, x, this._canvas.height, 255, 255, 255, 0xFF);
+	}
+	
 	// Draw series
 	for (var i=0; i < this._series.length; i++) {
 		this._series[i].draw(imageData, this._verticalPixelsPerPoint, this._gridMin, w, this._height);
+
+		if (rocketcharts.HUD) {
+			legendLines[legendLines.length] = this._series[i].title + " [OPEN]: " + formatRate(this._series[i].data[legendPoint]["open"]);
+			legendLines[legendLines.length] = this._series[i].title + " [HIGH]: " + formatRate(this._series[i].data[legendPoint]["high"]);
+			legendLines[legendLines.length] = this._series[i].title + " [LOW]: " + formatRate(this._series[i].data[legendPoint]["low"]);
+			legendLines[legendLines.length] = this._series[i].title + " [CLOSE]: " + formatRate(this._series[i].data[legendPoint]["close"]);
+			legendLines[legendLines.length] = this._series[i].title + " [DATE]: " + this._series[i].data[legendPoint]["date"];
+		} else {
+			legendLines[legendLines.length] = this._series[i].title;
+		}
 	};
 	
 	// Draw indicators
 	for (var i=0; i < this._indicators.length; i++) {
 		this._indicators[i].draw(imageData, this._verticalPixelsPerPoint, this._gridMin, w, this._height);
+		
+		for (var j=0; j < this._indicators[i]._indicator._series.length; j++) {
+			if (rocketcharts.HUD) {
+				legendLines[legendLines.length] = this._indicators[i]._indicator._series[j].title + ": " + formatRate(this._indicators[i]._indicator._data[j][legendPoint]);
+			} else {
+				legendLines[legendLines.length] = this._indicators[i]._indicator._series[j].title;	
+			}
+		}
 	};
 	
-	// Draw HUD
-	if (rocketcharts.HUD) {
-		var horizSpacing = w / rocketcharts.data[0].data.length;
-		var halfhorizSpacing = Math.round(horizSpacing / 2.0) - 1;
-		var x = (rocketcharts.HUDPoint * horizSpacing) + halfhorizSpacing;
-		line(imageData, x, 0, x, this._canvas.height, 255, 255, 255, 0xFF);
-		
-		if (this._series.length > 0) {
-			box(imageData, 10, 10, 210, 150, 0, 0, 0, 0xFF);
-			rasterText(imageData, "open:  " + this._series[0].data[rocketcharts.HUDPoint]["open"], 12, 12);
-			rasterText(imageData, "high:  " + this._series[0].data[rocketcharts.HUDPoint]["high"], 12, 27);
-			rasterText(imageData, "low:   " + this._series[0].data[rocketcharts.HUDPoint]["low"], 12, 42);
-			rasterText(imageData, "close: " + this._series[0].data[rocketcharts.HUDPoint]["close"], 12, 57);
-			rasterText(imageData, "date:  " + this._series[0].data[rocketcharts.HUDPoint]["date"], 12, 72);
-		}
+	boxBlend(imageData, 10, 10, 210, (legendLines.length * 15) + 10, 0, 0, 0, 60);// 0xFF);
+	for (var i=0; i < legendLines.length; i++) {
+		rasterText(imageData, legendLines[i] , 12, 15 * (i+1));
 	}
 	
 };
@@ -1065,6 +1072,60 @@ function setPixel(imageData, x, y, r, g, b, a) {
     imageData.data[index+3] = a;
 }
 
+function boxBlend(context,x0,y0,x1,y1,r,g,b,a,border){
+	
+	var xinc;
+	var yinc;
+	var cumul;
+	var x;
+	var y;
+	x = x0;
+	y = y0;
+	
+	// Do this to remove the <= from the loops, and use <
+	x1++;
+	y1++;
+	
+	if (border)
+	{
+		for (y=y0; y<y1; y++) // row by row from the top down
+		{
+			for (x=x0; x<x1; x++)
+			{
+				
+				if ( y==y0 || y==(y1-1) || x==x0 || x==(x1-1) )
+				{
+					setPixel(context, x, y, 0, 0, 0, a);
+				}
+				else
+				{
+					setPixel(context, x, y, r, g, b, a);
+				}
+			}
+		}
+	}
+	else
+	{
+		for (y=y0; y<y1; y++) // row by row from the top down
+		{
+			for (x=x0; x<x1; x++)
+			{
+				setPixelBlend(context, x, y, r, g, b, a);
+			}
+		}
+	}
+}
+
+function setPixelBlend(imageData, x, y, r, g, b, a) {
+    var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
+    var newAlpha = a / 255.0;
+	
+	imageData.data[index+0] = (1.0 - newAlpha) * r + newAlpha * imageData.data[index+0];
+    imageData.data[index+1] = (1.0 - newAlpha) * g + newAlpha * imageData.data[index+1];
+    imageData.data[index+2] = (1.0 - newAlpha) * b + newAlpha * imageData.data[index+2];
+    imageData.data[index+3] = 255.0;
+}
+
 function getPixel(imageData, x, y) {
     index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
     return {r: imageData.data[index+0],
@@ -1236,6 +1297,16 @@ function hexToRgb(hex) {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : null;
+}
+
+function formatRate(value) {
+	var formattedString = "";
+	
+	if (value != null) {
+		formattedString = value.toFixed(4);
+	}
+	
+	return formattedString;
 }
 
 function GeneratePriceHistory(){
