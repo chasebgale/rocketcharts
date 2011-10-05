@@ -48,6 +48,8 @@ rocketchart.prototype.init = function(element, settings){
 			rocketcharts.draw();
 		});
 		this.style.cursor = 'crosshair';
+		rocketcharts.headsUpDisplay(event.offsetX, event.offsetY);
+		rocketcharts.draw();
 		return false; // Prevents browser from changing cursor to 'I-Beam', thinking we are trying to select text
 	});
 	this.element.bind("mouseup", function(event, ui) {
