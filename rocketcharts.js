@@ -1244,6 +1244,12 @@ function randomInRange(minVal,maxVal)
   return randVal;
 }
 
+/*
+ * TODO: I am debating this functionality being included in the library...
+ * Really, we should just have the methods to add indicators/series/etc and have
+ * users develop a gui to consume said methods... but for now we'll keep it; better I guess
+ * to illustate 'here is a simple way of doing it.'
+ */
 function GenerateDialogs(element, indicators) {
 	var addIndicatorDialog = "<div id=\"rocketcharts-addIndicator-dialog-form\" title=\"Add New Indicator\">" +
 	"<div id=\"tabs\">" +
