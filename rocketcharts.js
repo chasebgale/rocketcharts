@@ -1,3 +1,9 @@
+/**
+ * Base class, keeps track of our panels, settings, metrics and data, also exposes indicator enum
+ * @alias				rocketcharts
+ * @return	{bool}
+ * @method
+ */
 function rocketchart() {
 	this.panels = new Array();
 	this.data = new Array();
@@ -25,6 +31,14 @@ function rocketchart() {
 	return true;
 }
 
+/**
+ * Appends markup to passed element, hooks into mouse-events, sets up our raster text, other bootup stuff
+ * @alias				rocketcharts.init(element, settings)
+ * @param	{string}	element		The string identifier of the html element to attach to
+ * @param	{Object}	settings	Holds any number of settings
+ * @return	{void}
+ * @method
+ */
 rocketchart.prototype.init = function(element, settings){
 		
 	// store global variable after looking it up with jquery
@@ -137,6 +151,14 @@ rocketchart.prototype.init = function(element, settings){
 
 };
 
+/**
+ * Handles element resizing
+ * @alias				rocketcharts.resize(w, h)
+ * @param	{int}		w	Width
+ * @param	{int}		h	Height
+ * @return	{void}
+ * @method
+ */
 rocketchart.prototype.resize = function(w, h){
 	
 	var calcHeight = 0;
@@ -156,6 +178,14 @@ rocketchart.prototype.resize = function(w, h){
 	}
 }
 
+/**
+ * Calculates point for HUD, sets draw flags based on mouse position
+ * @alias				rocketcharts.headsUpDisplay(x, y)
+ * @param	{int}		x		
+ * @param	{int}		y
+ * @return	{void}
+ * @method
+ */
 rocketchart.prototype.headsUpDisplay = function(x, y){
 	var dateAxisWidth = this.width - this.priceAxisWidth;
 	
@@ -175,6 +205,12 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 	}
 }
 
+/**
+ * Adds a canvas to our root element and tracks it in our panels array
+ * @alias				rocketcharts.addPanel()
+ * @return	{int}		The ID of the panel that was added
+ * @method
+ */
 rocketchart.prototype.addPanel = function(){
 	
 	var calcHeight = 0;
@@ -215,6 +251,16 @@ rocketchart.prototype.addPanel = function(){
 	return panelID;
 }
 
+/**
+ * Adds a new primary series to the chart
+ * @alias				rocketcharts.addSeries(title, data, type, panel)
+ * @param	{string}	title		The string identifier for this series		
+ * @param	{Array}		data		Array of {Object}s with the properties: Open, High, Low, Close, Date
+ * @param	{int}		type		Enum identifier describing chart type		
+ * @param	{int}		panel		ID of the panel to add the series to
+ * @return	{void}
+ * @method
+ */
 rocketchart.prototype.addSeries = function(title, data, type, panel){
 
 	var panelID = -1;
@@ -244,7 +290,7 @@ rocketchart.prototype.addSeries = function(title, data, type, panel){
 
 /**
  * Adds a new indicator to the chart
- * @alias				rocketchart.addIndicator(id, params, series, panel)
+ * @alias				rocketcharts.addIndicator(id, params, series, panel)
  * @param	{string}	id		The string identifier of the indicator to add, i.e. 'simplemovingaverage'
  * @param	{Array}		params	The array of user-supplied parameters specific to the indicator
  * @param	{int}		series	The id of the series' data we want to calculate this indicator from
@@ -271,7 +317,13 @@ rocketchart.prototype.addIndicator = function(id, params, series, panel){
 };
 
 
-
+/**
+ * Beginning of a chain of function calls to draw chart - creates image data for each canvas
+ * we are tracking, in turn passes that imageData to each panel in our array for drawing 
+ * @alias				rocketcharts.draw()
+ * @return	{void}
+ * @method
+ */
 rocketchart.prototype.draw = function(){
 	
 	var height = 0;
@@ -337,6 +389,16 @@ rocketchart.prototype.draw = function(){
 
 var rocketcharts = new rocketchart();
 
+
+/**
+ * Base class for our series
+ * @alias				new rocketseries(data, type, title)
+ * @param	{Array}		data	Array of OHLC data
+ * @param	{string}	type	The string identifier of the series type enum
+ * @param	{string}	title	The string identifier for this series
+ * @return	{bool}
+ * @method
+ */
 function rocketseries(data, type, title){
 	this.data = data;
 	this.type = type;
@@ -345,6 +407,9 @@ function rocketseries(data, type, title){
 	return true;
 }
 
+/**
+ * Series type enumeration
+ */
 rocketseries.seriesType = {
 	LINE: "line",
 	DOT: "dot",
@@ -353,6 +418,17 @@ rocketseries.seriesType = {
 	DISJOINTED: "disjointed"
 }
 
+/**
+ * Switches between series type and calls subsequent draw methods
+ * @alias				rocketseries.draw(imageData, verticalPixelPerPoint, gridMin, w, h)
+ * @param	{Array}		imageData				Array of pixel data
+ * @param	{float}		verticalPixelPerPoint	The amount of pixels that represent one value point
+ * @param	{float}		gridMin					The low end value of the chart
+ * @param	{int}		w						Width of panel
+ * @param	{int}		h						Height of panel
+ * @return	{bool}
+ * @method
+ */
 rocketseries.prototype.draw = function(imageData, verticalPixelPerPoint, gridMin, w, h){
 	switch(this.type){
 		case 0:
@@ -500,7 +576,7 @@ rocketpanel.prototype.draw = function(imageData, w){
 		}
 	};
 	
-	boxBlend(imageData, 10, 10, 210, (legendLines.length * 15) + 10, 0, 0, 0, 60);// 0xFF);
+	boxBlend(imageData, 10, 10, 210, (legendLines.length * 15) + 10, 25, 25, 25, 60);// 0xFF);
 	for (var i=0; i < legendLines.length; i++) {
 		rasterText(imageData, legendLines[i] , 12, 15 * (i+1));
 	}
