@@ -18,6 +18,7 @@ function rocketchart() {
 	settings.minimumPanelHeight = 200;
 	settings.defaultUpColor = "#00EAFF";
 	settings.defaultDownColor = "#005F6B";
+	settings.backgroundColor = "#343838";
 	this.settings = settings;
 	
 	var view = new Object();
@@ -74,15 +75,26 @@ rocketchart.prototype.init = function(element, settings){
 		rocketcharts.draw();
 	});
 	
-	// TODO: Instead of doing this, merge the settings argument with this.settings
-	// i.e. if a settings object was passed with only the property 'resizable' set, just that
+	// If a settings object was passed with only the property 'resizable' set, just that
 	// parameter should be updated in the global object
 	if (settings != undefined) {
-		
+		if (settings.defaultUpColor != undefined) {
+			this.settings.defaultUpColor = settings.defaultUpColor;
+		}
+		if (settings.defaultDownColor != undefined) {
+			this.settings.defaultDownColor = settings.defaultDownColor;
+		}
+		if (settings.backgroundColor != undefined) {
+			this.settings.backgroundColor = settings.backgroundColor;
+		}
+		if (settings.customUI != undefined) {
+			this.settings.customUI = settings.customUI;
+		}
 	}
 	
 	this.settings.defaultUpColor = hexToRgb(this.settings.defaultUpColor);
 	this.settings.defaultDownColor = hexToRgb(this.settings.defaultDownColor);
+	this.settings.backgroundColor = hexToRgb(this.settings.backgroundColor);
 	
 	if (this.settings.resizable)
 		this.element.resizable();
@@ -93,7 +105,7 @@ rocketchart.prototype.init = function(element, settings){
 	}
 	
 	// Experimental: Floating Date Axis
-	this.element.append("<div style=\"height: 15px; width: " + this.width + "px;\">" +
+	this.element.append("<div style=\"height: 15px; width: " + this.width + "px; background-color: " + rgbToHex(this.settings.backgroundColor.r, this.settings.backgroundColor.g, this.settings.backgroundColor.b) + ";\">" +
 							"<canvas id=\"dateAxisCanvas\" width=\"" + this.width + "\" height=\"15\"></canvas>" +
 						"</div>");
 	
@@ -751,10 +763,10 @@ rocketpanel.prototype.calculate = function(){
 };
 
 // id = lookup in public indicator array
-function rocketindicator(id, data, params){
+function rocketindicator(id, data, params, series){
 	// lookup the right function (object) to create based on the id and pass it the data
 	var calc = new rocketindicatorcalculations();
-	this._indicator = new calc[id](data, params);
+	this._indicator = new calc[id](data, params, series);
 }
 
 rocketindicator.prototype.draw = function(imageData, verticalPixelPerPoint, gridMin, w, h){
@@ -1492,6 +1504,15 @@ function hexToRgb(hex) {
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16)
     } : null;
+}
+
+function rgbToHex(r,g,b) {return "#" + toHex(r)+toHex(g)+toHex(b)}
+function toHex(N) {
+ if (N==null) return "00";
+ N=parseInt(N); if (N==0 || isNaN(N)) return "00";
+ N=Math.max(0,N); N=Math.min(N,255); N=Math.round(N);
+ return "0123456789ABCDEF".charAt((N-N%16)/16)
+      + "0123456789ABCDEF".charAt(N%16);
 }
 
 function formatRate(value) {
