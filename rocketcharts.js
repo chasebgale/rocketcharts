@@ -353,12 +353,13 @@ rocketchart.prototype.addPanel = function(){
  * @alias				rocketcharts.addSeries(title, data, type, panel)
  * @param	{string}	title		The string identifier for this series		
  * @param	{Array}		data		Array of {Object}s with the properties: Open, High, Low, Close, Date
- * @param	{int}		type		Enum identifier describing chart type		
+ * @param	{int}		type		Enum identifier describing chart type	
+ * @param	{Object}	style		Object containing colors, line thickness, transparency, etc...	
  * @param	{int}		panel		ID of the panel to add the series to
  * @return	{void}
  * @method
  */
-rocketchart.prototype.addSeries = function(title, data, type, panel){
+rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 
 	var panelID = -1;
 	var panelHeight = -1;
@@ -381,7 +382,7 @@ rocketchart.prototype.addSeries = function(title, data, type, panel){
 	
 	// Keep track of all series data in a root array for quick lookups
 	this.data[this.data.length] = {title: title, data: data};
-	this.panels[panelID].addSeries(new rocketseries(this.data[this.data.length - 1].data, type, title));
+	this.panels[panelID].addSeries(new rocketseries(this.data[this.data.length - 1].data, type, title, style));
 	this.draw();
 };
 
@@ -486,20 +487,33 @@ rocketchart.prototype.draw = function(){
 
 var rocketcharts = new rocketchart();
 
-
 /**
  * Base class for our series
  * @alias				new rocketseries(data, type, title)
  * @param	{Array}		data	Array of OHLC data
  * @param	{string}	type	The string identifier of the series type enum
  * @param	{string}	title	The string identifier for this series
+ * @param	{Object}	style	Object containing series draw thickness, colors, transparency, etc...
  * @return	{bool}
- * @method
+ * @method 
  */
-function rocketseries(data, type, title){
+function rocketseries(data, type, title, style){
 	this.data = data;
 	this.type = type;
 	this.title = title;
+	this.style = style;
+	
+	if (this.style == undefined) {
+		this.style = new Object();
+	}
+	
+	if (this.style.UpColor == undefined) {
+		this.style.UpColor = rocketcharts.settings.defaultUpColor;
+	}
+	
+	if (this.style.DownColor == undefined) {
+		this.style.DownColor = rocketcharts.settings.defaultDownColor;
+	}
 	
 	return true;
 }
@@ -579,13 +593,13 @@ rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPo
 			
 			if (valueOpen < valueClose)
 			{
-				line(imageData, X, yvalueHigh, X, yvalueLow, rocketcharts.settings.defaultUpColor.r, rocketcharts.settings.defaultUpColor.g, rocketcharts.settings.defaultUpColor.b, 0xff);
-				box(imageData, X-halfhorizSpacing, yvalueClose, X+halfhorizSpacing, yvalueOpen, rocketcharts.settings.defaultUpColor.r, rocketcharts.settings.defaultUpColor.g, rocketcharts.settings.defaultUpColor.b, 0xff, false);
+				line(imageData, X, yvalueHigh, X, yvalueLow, this.style.UpColor.r, this.style.UpColor.g, this.style.UpColor.b, 0xff);
+				box(imageData, X-halfhorizSpacing, yvalueClose, X+halfhorizSpacing, yvalueOpen, this.style.UpColor.r, this.style.UpColor.g, this.style.UpColor.b, 0xff, false);
 			}
 			else
 			{
-				line(imageData, X, yvalueHigh, X, yvalueLow, rocketcharts.settings.defaultDownColor.r, rocketcharts.settings.defaultDownColor.g, rocketcharts.settings.defaultDownColor.b, 0xff);
-				box(imageData, X-halfhorizSpacing, yvalueOpen, X+halfhorizSpacing, yvalueClose, rocketcharts.settings.defaultDownColor.r, rocketcharts.settings.defaultDownColor.g, rocketcharts.settings.defaultDownColor.b, 0xff, false);
+				line(imageData, X, yvalueHigh, X, yvalueLow, this.style.DownColor.r, this.style.DownColor.g, this.style.DownColor.b, 0xff);
+				box(imageData, X-halfhorizSpacing, yvalueOpen, X+halfhorizSpacing, yvalueClose, this.style.DownColor.r, this.style.DownColor.g, this.style.DownColor.b, 0xff, false);
 			}
 		}
 		
