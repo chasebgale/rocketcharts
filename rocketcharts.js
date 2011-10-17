@@ -469,8 +469,13 @@ rocketchart.prototype.draw = function(){
 	//var step = Math.floor(displayedPoints / Math.floor(dateAxisWidth / 150));
 	//var minorStep = Math.floor(step / 10); //Math.ceil(displayedPoints / (dateAxisWidth / 5));
 	
+	// Take the last date string, calculate it's width in pixels
+	// TODO: Perhaps calculate the average length to avoid one-off long or short strings?
+	var averageDateSpace = (this.data[0].data[displayedPoints - 1].date.length * 6) + 20;
+	
 	var minorStep = 4;
-	var majorStep = Math.ceil(150 / (minorStep * horizontalPixelsPerPoint));
+	var majorStep = Math.ceil(averageDateSpace / (minorStep * horizontalPixelsPerPoint));
+	//var majorStep = Math.ceil(150 / (minorStep * horizontalPixelsPerPoint));
 	
 	var k = 0;
 	var tickCount = 0;
@@ -485,7 +490,8 @@ rocketchart.prototype.draw = function(){
 			if (tickCount % majorStep == 0) {
 				//k = i * horizontalPixelsPerPoint;
 				line(imageData, k, 0, k, 3, 255,255,255, 0xFF);
-				rasterText(imageData, this.data[0].data[i].date, k - 60, 6);
+				//rasterText(imageData, this.data[0].data[i].date, k - 60, 6);
+				rasterText(imageData, this.data[0].data[i].date, k - (averageDateSpace / 2) + 10, 6);
 			}
 		}
 		
@@ -616,7 +622,6 @@ rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPo
 		}
 		
 		X += horizSpacing;
-		
 	}
 }
 
@@ -648,9 +653,9 @@ rocketpanel.prototype.draw = function(imageData, w){
 	
 	for (var i=1; i < 10; i++) {
 		yValue = this._canvas.height - (this._verticalPixelsPerPoint * (i * this._gridStep));
-		valueAtPoint = ((i * this._gridStep) - this._gridMin);
+		valueAtPoint = ((i * this._gridStep) + this._gridMin);
 		rasterText(imageData, valueAtPoint.toFixed(4), w + 5, yValue - 3);
-		line(imageData, w, yValue, w + 3, yValue, 255,255,255,0xFF);
+		//line(imageData, w, yValue, w + 3, yValue, 255,255,255,0xFF);
 		
 		if ((i % 2) == 0) {
 			box(imageData, 0, yValue, w, oldY, 45, 45, 45, 0xFF);
@@ -666,7 +671,7 @@ rocketpanel.prototype.draw = function(imageData, w){
 	if (rocketcharts.HUD) {
 		legendPoint = rocketcharts.HUDPoint;
 		var horizSpacing = w / rocketcharts.data[0].data.length;
-		var halfhorizSpacing = Math.round(horizSpacing / 2.0) - 1;
+		var halfhorizSpacing = Math.floor(horizSpacing / 2.0) - 1;
 		var x = (rocketcharts.HUDPoint * horizSpacing) + halfhorizSpacing;
 		line(imageData, x, 0, x, this._canvas.height, 255, 255, 255, 0xFF);
 	}
@@ -841,7 +846,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 	var i = 0;
 	var x = 0;
 	var horizSpacing = w / this._indicator._sourceData.length;
-	var halfhorizSpacing = horizSpacing / 2;
+	var halfhorizSpacing = Math.round(horizSpacing / 2);
 	var barHeight = 0;
 	var counter = 0;
 	
