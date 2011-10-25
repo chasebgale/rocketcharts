@@ -21,6 +21,7 @@ function rocketchart() {
 	settings.backgroundColor = "#343838";
 	this.settings = settings;
 	
+	// TODO: Use View object to store horizontal spacing, etc and share between panels
 	var view = new Object();
 	view.horizontalPixelsPerPoint = 0;
 	view.startingPoint = 0;
@@ -46,13 +47,21 @@ rocketchart.prototype.init = function(element, settings){
 	this.element = $(element);
 	this.width = this.element.width();
 	
-	this.element.append("<div id=\"panels\" style=\"height: 100%; width: " + this.width + "px;\"></div>");
+	this.element.append("<div id=\"panels\" style=\"height: 100%; width: 100%;\"></div>");
 	var panelsElement = $("#panels");
 	
 	panelsElement.css("overflow", "auto");
 	panelsElement.css("margin", "0px");
 	panelsElement.css("padding", "0px");
 	
+	
+	
+	$(window).resize(function() {
+		rocketcharts.resize(rocketcharts.element.context.clientWidth, rocketcharts.element.context.clientHeight);
+		rocketcharts.draw();
+	});
+	
+	// Keeping this for future implementation of drag 'handles' via JQueryUI
 	this.element.bind( "resize", function(event, ui) {
 		rocketcharts.resize(ui.size.width, ui.size.height);
 		rocketcharts.draw();
@@ -105,7 +114,7 @@ rocketchart.prototype.init = function(element, settings){
 	}
 	
 	// Experimental: Floating Date Axis
-	this.element.append("<div style=\"height: 15px; width: " + this.width + "px; background-color: " + rgbToHex(this.settings.backgroundColor.r, this.settings.backgroundColor.g, this.settings.backgroundColor.b) + ";\">" +
+	this.element.append("<div style=\"height: 15px; width: 100%; background-color: " + rgbToHex(this.settings.backgroundColor.r, this.settings.backgroundColor.g, this.settings.backgroundColor.b) + ";\">" +
 							"<canvas id=\"dateAxisCanvas\" width=\"" + this.width + "\" height=\"15\"></canvas>" +
 						"</div>");
 	
@@ -270,19 +279,31 @@ rocketchart.prototype.init = function(element, settings){
  */
 rocketchart.prototype.resize = function(w, h){
 	
-	var calcHeight = 0;
+	/*
+	 * The code relating to calcHeight was for dynamically resizing the height of the panels
+	 * when the end-user resized them via JQueryUI - putting this on hold for the moment
+	 */
+	
+	// var calcHeight = 0;
+	
+	this.width = w;
+	this.dateAxisCanvas.setAttribute("width", w);
+	var simpleHeight = Math.floor(h / this.panels.length) - 1;
 	
 	for (var i=0; i < this.panels.length; i++) {
 		
+		/*
 		if (this.panels[i]._userHeight <= 1){
 			calcHeight = this.panels[i]._userHeight * h;
 		} else {
 			calcHeight = this.panels[i]._userHeight;
 		}
-				
+		*/
+		
 		// update the width and height of the canvas
-		this.panels[i]._canvas.setAttribute("width", w);
-		this.panels[i]._canvas.setAttribute("height", calcHeight);
+		this.panels[i]._canvas.setAttribute("width", w - 1);
+		this.panels[i]._canvas.setAttribute("height", simpleHeight);
+		//this.panels[i]._canvas.setAttribute("height", calcHeight);
 		
 	}
 }
