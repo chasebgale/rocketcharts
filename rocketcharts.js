@@ -10,7 +10,8 @@ function rocketchart() {
 	this.element;
 	this.indicators = [{name: 'Simple Moving Average', id: 'simplemovingaverage'},
 					   {name: 'Weighted Moving Average', id: 'weightedmovingaverage'},
-					   {name: 'Moving Average Convergance/Divergance', id: 'movingaverageconvergancedivergance'}]
+					   {name: 'Moving Average Convergance/Divergance', id: 'movingaverageconvergancedivergance'},
+					   {name: 'Parabolic SAR', id: 'parabolicsar'}]
 					   
 	this.priceAxisWidth = 75;
 					   
@@ -68,11 +69,19 @@ rocketchart.prototype.init = function(element, settings){
 	});
 	this.element.bind("mousedown", function(event, ui) {
 		$(this).bind( "mousemove", function(event, ui) {
-			rocketcharts.headsUpDisplay(event.offsetX, event.offsetY);
+			
+			var relativeX = event.pageX - this.offsetLeft;
+		    var relativeY = event.pageY - this.offsetTop;
+			
+			rocketcharts.headsUpDisplay(relativeX, relativeY);
 			rocketcharts.draw();
 		});
 		this.style.cursor = 'crosshair';
-		rocketcharts.headsUpDisplay(event.offsetX, event.offsetY);
+		
+		var relativeX = event.pageX - this.offsetLeft;
+	    var relativeY = event.pageY - this.offsetTop;
+		
+		rocketcharts.headsUpDisplay(relativeX, relativeY);
 		rocketcharts.draw();
 		return false; // Prevents browser from changing cursor to 'I-Beam', thinking we are trying to select text
 	});
@@ -804,6 +813,9 @@ rocketindicator.prototype.draw = function(imageData, verticalPixelPerPoint, grid
 			case rocketseries.seriesType.HISTOGRAM:
 				this.drawHistogram(imageData, verticalPixelPerPoint, gridMin, w, h, i);
 				break;
+			case rocketseries.seriesType.DOT:
+				this.drawDot(imageData, verticalPixelPerPoint, gridMin, w, h, i);
+				break;
 		}
 	}
 }
@@ -853,6 +865,30 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 			}
 
 			lastValueOld = lastValue;
+		}
+		
+		X += horizSpacing;
+	}
+}
+
+rocketindicator.prototype.drawDot = function(imageData, verticalPixelPerPoint, gridMin, w, h, s){
+	var indicatorData = this._indicator._data;
+	var seriesLength = 0;
+	var lastValue = 0;
+	var lastValueOld = 0;
+	var i = 0;
+	var X = 0;
+	var horizSpacing = w / this._indicator._sourceData.length;
+	var halfhorizSpacing = horizSpacing / 2;
+	
+	seriesLength = indicatorData[s].length;
+	
+	for (i = 0; i < seriesLength; i++)
+	{
+		if (indicatorData[s][i] != null)
+		{
+			lastValue = h - (verticalPixelPerPoint * (indicatorData[s][i] - gridMin));
+			box(imageData, X - 1, lastValue - 1, X, lastValue, 255, 255, 255, 255);
 		}
 		
 		X += horizSpacing;
@@ -1167,6 +1203,135 @@ rocketindicatorcalculations.prototype.movingaverageconvergancedivergance = funct
 			this._data[0] = histogramValues;
 			this._data[1] = triggerValues;
 			this._data[2] = MACDValues;
+			
+		}
+	}
+	
+	this.calculate();
+};
+
+rocketindicatorcalculations.prototype.parabolicsar = function (data, params, series) {
+	this._params = params;
+	this._series = series;
+	this._sourceData = data;
+	this._data = new Array();
+	
+	if (this._series == undefined){
+		this._series = new Array();
+		this._series[0] = {type: rocketseries.seriesType.DOT, title: "SAR", color: 0xFF0000};
+	}
+	
+	if (this._params == undefined){
+		// Create default params, will also serve the purpose of declaring the parameters
+		this._params = new Array();
+		this._params[0] = {name: 'Acceleration', type: 'float', value: 0.02};
+		this._params[1] = {name: 'Acceleration Ceiling', type: 'float', value: 0.2};
+	}
+	
+	this.calculate = function(){
+		if (this._sourceData != null) {
+			
+			var i = 0;
+			
+			for (var i = 0; i<this._series.length; i++){
+				this._data[i] = new Array();
+			}
+			
+			var RecordCount = this._sourceData.length;
+			var Record = 0;
+		    var Period = 0;
+			var Start = 0;
+			var Position = 0;
+			
+		    var Max = 0;
+		    var Min = 0;
+		    var pSAR = 0;
+		    var pEP = 0;
+		    var pAF = 0;
+		    var SAR = 0;
+		    var AF = 0;
+		    var Hi = 0;
+		    var Lo = 0;
+		    var pHi = 0;
+		    var pLo = 0;
+		    
+		    var MinAF = this._params[0].value;
+			var MaxAF = this._params[1].value;
+			
+			Start = 2;
+			
+			Max = this._sourceData[1]["high"];
+			Min = this._sourceData[1]["low"];
+			
+			if ((this._sourceData[2]["high"] - this._sourceData[1]["high"]) < (this._sourceData[2]["low"] - this._sourceData[1]["low"]))
+			{
+				pSAR = Max;
+				Position = -1;
+			}
+			else
+			{
+				pSAR = Min;
+				Position = 1;
+			}
+			
+			pAF = MinAF;
+			SAR = pSAR;
+			Hi = Max;
+			Lo = Min;
+			pHi = Hi;
+			pLo = Lo;
+			AF = MinAF;
+			
+			for (Record = Start; Record < RecordCount; ++Record)
+			{
+				if (Position == 1)
+				{
+					if (this._sourceData[Record]["high"] > Hi)
+					{
+						Hi = this._sourceData[Record]["high"];
+						if (AF < MaxAF)
+							AF = AF + MinAF;
+					}
+					
+					SAR = pSAR + pAF * (pHi - pSAR);
+				
+					if (this._sourceData[Record]["low"] < SAR)
+					{
+						Position = -1;
+						AF = MinAF;
+						SAR = pHi;
+						Hi = 0;
+						Lo = this._sourceData[Record]["low"];
+					}
+				}
+				else if (Position == -1)
+				{
+					if (this._sourceData[Record]["low"] < Lo)
+					{
+						Lo = this._sourceData[Record]["low"];
+						if (AF < MaxAF)
+							AF = AF + MinAF;
+					}
+					
+					SAR = pSAR + pAF * (pLo - pSAR);
+					
+					if (this._sourceData[Record]["high"] > SAR)
+					{
+						Position = 1;
+						AF = MinAF;
+						SAR = pLo;
+						Lo = 0;
+						Hi = this._sourceData[Record]["high"];
+					}
+				}
+				
+				pHi = Hi;
+		        pLo = Lo;
+		        pSAR = SAR;
+		        pAF = AF;
+		        
+		        this._data[0][Record] = SAR;
+			}
 			
 		}
 	}
