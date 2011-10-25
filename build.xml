@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<project basedir="." default="compile">
+
+  <taskdef name="jscomp" classname="com.google.javascript.jscomp.ant.CompileTask" 
+		classpath="compiler.jar"/>
+
+  <target name="compile">
+    
+    <jscomp compilationLevel="simple" warning="verbose" 
+            debug="true" output="${basedir}/release/rocketcharts.js">
+
+	  <externs dir="${basedir}/externs">
+		<file name="date.format.js"/>
+      </externs>
+
+      <sources dir="${basedir}/">
+        <file name="rocketcharts.js"/>
+      </sources>
+
+    </jscomp>
+    
+  </target>
+
+</project>

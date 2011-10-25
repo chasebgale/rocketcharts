@@ -1292,7 +1292,7 @@ function line(context,x0,y0,x1,y1,r,g,b,a,w){
 }
 
 function setPixel(imageData, x, y, r, g, b, a) {
-    index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
+    var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
     imageData.data[index+0] = r;
     imageData.data[index+1] = g;
     imageData.data[index+2] = b;
@@ -1354,7 +1354,7 @@ function setPixelBlend(imageData, x, y, r, g, b, a) {
 }
 
 function getPixel(imageData, x, y) {
-    index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
+    var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
     return {r: imageData.data[index+0],
     		g: imageData.data[index+1],
     		b: imageData.data[index+2],
