@@ -42,7 +42,7 @@ function rocketchart() {
  * @method
  */
 rocketchart.prototype.init = function(element, settings){
-		
+	
 	// store global variable after looking it up with jquery
 	this.element = $(element);
 	this.width = this.element.width();

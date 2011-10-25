@@ -6,12 +6,12 @@
 
   <target name="compile">
     
-    <jscomp compilationLevel="simple" warning="verbose" 
+    <jscomp compilationLevel="simple" warning="default" 
             debug="true" output="${basedir}/release/rocketcharts.js">
 
-	  <externs dir="${basedir}/externs">
-		<file name="date.format.js"/>
-      </externs>
+	  <sources dir="${basedir}/libs">
+        <file name="date.format.js"/>
+      </sources>
 
       <sources dir="${basedir}/">
         <file name="rocketcharts.js"/>
