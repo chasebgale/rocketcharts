@@ -337,23 +337,25 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 	// For now displayedPoints = all ticks, in the future whatever zoom or view we have set
 	var displayedPoints = this.data[0].data.length; 
 	var horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
+	var halfhorizSpacing = Math.floor(horizontalPixelsPerPoint / 2.0) - 1;
 	
 	var point = -1;
 	
 	if (x > dateAxisWidth) {
 		// flag the removal of info box
-		this.HUD = false;
 	} else {
-		this.HUD = true;
 		point = Math.floor(x / horizontalPixelsPerPoint);
-		this.HUDPoint = point;
 	}
+	
+	var pointX = (point * horizontalPixelsPerPoint) + halfhorizSpacing;
 	
 	var height = 0;
 	var width = 0;
 	
 	var bottom = 0;
 	var calcY = 0;
+	
+	var legendLines = new Array();
 	
 	for (var i=0; i < this.panelOverlays.length; i++) {
 		
@@ -367,7 +369,7 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 		// create a new pixel array
 		var imageData = context.createImageData(width, height);
 		
-		line(imageData, x, 0, x, height, 255, 255, 255, 255, 1);
+		line(imageData, pointX, 0, pointX, height, 255, 255, 255, 255, 1);
 		
 		bottom = this.panelOverlays[i].offsetTop + this.panelOverlays[i].height;
 		
@@ -376,9 +378,32 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 			line(imageData, 0, calcY, width, calcY, 255, 255, 255, 255, 1);
 		}
 		
+		// HUD:
+		for (var s=0; s < this.panels[i]._series.length; s++) {
+			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [OPEN]: " + formatRate(this.panels[i]._series[s].data[point]["open"]);
+			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [HIGH]: " + formatRate(this.panels[i]._series[s].data[point]["high"]);
+			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [LOW]: " + formatRate(this.panels[i]._series[s].data[point]["low"]);
+			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [CLOSE]: " + formatRate(this.panels[i]._series[s].data[point]["close"]);
+			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [DATE]: " + this.panels[i]._series[s].data[point]["date"];
+		}
+
+		for (var s=0; s < this.panels[i]._indicators.length; s++) {
+			
+			for (var j=0; j < this.panels[i]._indicators[s]._indicator._series.length; j++) {
+				legendLines[legendLines.length] = this.panels[i]._indicators[s]._indicator._series[j].title + ": " + formatRate(this.panels[i]._indicators[s]._indicator._data[j][point]);
+			}
+		};
+		
+		boxBlend(imageData, 10, 10, 210, (legendLines.length * 15) + 10, 25, 25, 25, 60);// 0xFF);
+		for (var s=0; s < legendLines.length; s++) {
+			rasterText(imageData, legendLines[s] , 12, 15 * (s+1));
+		}
+		
 		
 		// copy the image data back onto the canvas
 		context.putImageData(imageData, 0, 0);
+		
+		legendLines = new Array();
 	};
 	
 }
@@ -756,28 +781,10 @@ rocketpanel.prototype.draw = function(imageData, w){
 	var legendLines = new Array();
 	var legendPoint = rocketcharts.data[0].data.length - 1;
 	
-	// Draw HUD Line
-	if (rocketcharts.HUD) {
-		legendPoint = rocketcharts.HUDPoint;
-		var horizSpacing = w / rocketcharts.data[0].data.length;
-		var halfhorizSpacing = Math.floor(horizSpacing / 2.0) - 1;
-		var x = (rocketcharts.HUDPoint * horizSpacing) + halfhorizSpacing;
-		line(imageData, x, 0, x, this._canvas.height, 255, 255, 255, 0xFF);
-	}
-	
 	// Draw series
 	for (var i=0; i < this._series.length; i++) {
 		this._series[i].draw(imageData, this._verticalPixelsPerPoint, this._gridMin, w, this._height);
-
-		if (rocketcharts.HUD) {
-			legendLines[legendLines.length] = this._series[i].title + " [OPEN]: " + formatRate(this._series[i].data[legendPoint]["open"]);
-			legendLines[legendLines.length] = this._series[i].title + " [HIGH]: " + formatRate(this._series[i].data[legendPoint]["high"]);
-			legendLines[legendLines.length] = this._series[i].title + " [LOW]: " + formatRate(this._series[i].data[legendPoint]["low"]);
-			legendLines[legendLines.length] = this._series[i].title + " [CLOSE]: " + formatRate(this._series[i].data[legendPoint]["close"]);
-			legendLines[legendLines.length] = this._series[i].title + " [DATE]: " + this._series[i].data[legendPoint]["date"];
-		} else {
-			legendLines[legendLines.length] = this._series[i].title;
-		}
+		legendLines[legendLines.length] = this._series[i].title;
 	};
 	
 	// Draw indicators
@@ -785,11 +792,7 @@ rocketpanel.prototype.draw = function(imageData, w){
 		this._indicators[i].draw(imageData, this._verticalPixelsPerPoint, this._gridMin, w, this._height);
 		
 		for (var j=0; j < this._indicators[i]._indicator._series.length; j++) {
-			if (rocketcharts.HUD) {
-				legendLines[legendLines.length] = this._indicators[i]._indicator._series[j].title + ": " + formatRate(this._indicators[i]._indicator._data[j][legendPoint]);
-			} else {
-				legendLines[legendLines.length] = this._indicators[i]._indicator._series[j].title;	
-			}
+			legendLines[legendLines.length] = this._indicators[i]._indicator._series[j].title;	
 		}
 	};
 	
