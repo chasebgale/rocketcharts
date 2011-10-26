@@ -6,6 +6,7 @@
  */
 function rocketchart() {
 	this.panels = new Array();
+	this.panelOverlays = new Array();
 	this.data = new Array();
 	this.element;
 	this.indicators = [{name: 'Simple Moving Average', id: 'simplemovingaverage'},
@@ -48,7 +49,7 @@ rocketchart.prototype.init = function(element, settings){
 	this.element = $(element);
 	this.width = this.element.width();
 	
-	this.element.append("<div id=\"panels\" style=\"height: 100%; width: 100%;\"></div>");
+	this.element.append("<div id=\"panels\" style=\"height: 100%; width: 100%; position: relative;\"></div>");
 	var panelsElement = $("#panels");
 	
 	panelsElement.css("overflow", "auto");
@@ -74,7 +75,7 @@ rocketchart.prototype.init = function(element, settings){
 		    var relativeY = event.pageY - this.offsetTop;
 			
 			rocketcharts.headsUpDisplay(relativeX, relativeY);
-			rocketcharts.draw();
+			//rocketcharts.draw();
 		});
 		this.style.cursor = 'crosshair';
 		
@@ -82,7 +83,7 @@ rocketchart.prototype.init = function(element, settings){
 	    var relativeY = event.pageY - this.offsetTop;
 		
 		rocketcharts.headsUpDisplay(relativeX, relativeY);
-		rocketcharts.draw();
+		//rocketcharts.draw();
 		return false; // Prevents browser from changing cursor to 'I-Beam', thinking we are trying to select text
 	});
 	this.element.bind("mouseup", function(event, ui) {
@@ -90,7 +91,8 @@ rocketchart.prototype.init = function(element, settings){
 		this.style.cursor = 'default';
 		rocketcharts.mouseDown = false;
 		rocketcharts.HUD = false;
-		rocketcharts.draw();
+		//rocketcharts.draw();
+		rocketcharts.clearHUD();
 	});
 	
 	// If a settings object was passed with only the property 'resizable' set, just that
@@ -312,7 +314,11 @@ rocketchart.prototype.resize = function(w, h){
 		// update the width and height of the canvas
 		this.panels[i]._canvas.setAttribute("width", w - 1);
 		this.panels[i]._canvas.setAttribute("height", simpleHeight);
-		//this.panels[i]._canvas.setAttribute("height", calcHeight);
+		this.panels[i]._canvas.style.top = simpleHeight * i;
+		
+		this.panelOverlays[i].setAttribute("width", w - 1);
+		this.panelOverlays[i].setAttribute("height", simpleHeight);
+		this.panelOverlays[i].style.top = simpleHeight * i;
 		
 	}
 }
@@ -342,6 +348,54 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 		point = Math.floor(x / horizontalPixelsPerPoint);
 		this.HUDPoint = point;
 	}
+	
+	var height = 0;
+	var width = 0;
+	
+	var bottom = 0;
+	var calcY = 0;
+	
+	for (var i=0; i < this.panelOverlays.length; i++) {
+		
+		// grab the datacontext of the canvas
+		var context = this.panelOverlays[i].getContext("2d");
+		
+		// read the height of the canvas
+		height = parseInt(this.panelOverlays[i].getAttribute("height"));
+		width = parseInt(this.panelOverlays[i].getAttribute("width"));
+		
+		// create a new pixel array
+		var imageData = context.createImageData(width, height);
+		
+		line(imageData, x, 0, x, height, 255, 255, 255, 255, 1);
+		
+		bottom = this.panelOverlays[i].offsetTop + this.panelOverlays[i].height;
+		
+		if ((y > this.panelOverlays[i].offsetTop) && (y < bottom) ) {
+			calcY = y - this.panelOverlays[i].offsetTop;
+			line(imageData, 0, calcY, width, calcY, 255, 255, 255, 255, 1);
+		}
+		
+		
+		// copy the image data back onto the canvas
+		context.putImageData(imageData, 0, 0);
+	};
+	
+}
+
+rocketchart.prototype.clearHUD = function(){
+	
+	for (var i=0; i < this.panelOverlays.length; i++) {
+
+		// This clears the canvas:
+		var context = this.panelOverlays[i].getContext("2d");
+		context.clearRect(0,0,this.panelOverlays[i].width,this.panelOverlays[i].height);
+		
+		// Hacky way, slower except in earlier canvas implementations:
+		//this.panelOverlays[i].setAttribute("width", this.panelOverlays[i].width);
+		
+	}
+	
 }
 
 /**
@@ -353,6 +407,7 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 rocketchart.prototype.addPanel = function(){
 	
 	var calcHeight = 0;
+	var calcY = 0;
 	
 	var panelID = this.panels.length;
 	var panelHeightPercent = 1 / (panelID + 1);
@@ -363,10 +418,6 @@ rocketchart.prototype.addPanel = function(){
 	}
 	
 	var panelsElement = $("#panels");
-	
-	// this.element.append
-	panelsElement.append('<canvas style="padding: 0px; margin: 0px;" id="panel' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
-	this.panels[panelID] = new rocketpanel(document.getElementById("panel" + panelID), actualHeight);
 	
 	for (var i=0; i < this.panels.length; i++) {
 		
@@ -384,8 +435,16 @@ rocketchart.prototype.addPanel = function(){
 			
 		// update the width and height of the canvas
 		this.panels[i]._canvas.setAttribute("height", actualHeight);
+		calcY += actualHeight;
 		
 	}
+	
+	// this.element.append
+	panelsElement.append('<canvas style="padding: 0px; margin: 0px; z-index: 0; position: absolute; left: 0px; top: ' + calcY + 'px;" id="panel' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
+	this.panels[panelID] = new rocketpanel(document.getElementById("panel" + panelID), actualHeight);
+	
+	panelsElement.append('<canvas style="padding: 0px; margin: 0px; z-index: 1; position: absolute; left: 0px; top: ' + calcY + 'px;" id="panelOverlay' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
+	this.panelOverlays[panelID] = document.getElementById("panelOverlay" + panelID);
 	
 	return panelID;
 }
