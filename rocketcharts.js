@@ -5,9 +5,9 @@
  * @method
  */
 function rocketchart() {
-	this.panels = new Array();
-	this.panelOverlays = new Array();
-	this.data = new Array();
+	this.panels = [];
+	this.panelOverlays = [];
+	this.data = [];
 	this.element;
 	this.indicators = [{name: 'Simple Moving Average', id: 'simplemovingaverage'},
 					   {name: 'Weighted Moving Average', id: 'weightedmovingaverage'},
@@ -355,7 +355,7 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 	var bottom = 0;
 	var calcY = 0;
 	
-	var legendLines = new Array();
+	var legendLines = [];
 	
 	for (var i=0; i < this.panelOverlays.length; i++) {
 		
@@ -403,7 +403,7 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 		// copy the image data back onto the canvas
 		context.putImageData(imageData, 0, 0);
 		
-		legendLines = new Array();
+		legendLines = [];
 	};
 	
 }
@@ -743,8 +743,8 @@ function rocketpanel(canvas, height){
 	this._canvas = canvas;
 	this._gridMax = -100000;
 	this._gridMin = 100000;
-	this._series = new Array();
-	this._indicators = new Array();
+	this._series = [];
+	this._indicators = [];
 	this._height = 0;
 	this._verticalPixelsPerPoint = 0;
 	this._userHeight = height;
@@ -778,7 +778,7 @@ rocketpanel.prototype.draw = function(imageData, w){
 		oldY = yValue;
 	};
 	
-	var legendLines = new Array();
+	var legendLines = [];
 	var legendPoint = rocketcharts.data[0].data.length - 1;
 	
 	// Draw series
@@ -878,6 +878,15 @@ rocketindicator.prototype.draw = function(imageData, verticalPixelPerPoint, grid
 			case rocketseries.seriesType.DOT:
 				this.drawDot(imageData, verticalPixelPerPoint, gridMin, w, h, i);
 				break;
+		}
+	}
+	
+	var yValue = 0;
+	
+	if (this._indicator._constantLines != undefined) {
+		for (var i=0; i<this._indicator._constantLines.length; i++) {
+			yValue = h - (verticalPixelPerPoint * (this._indicator._constantLines[i].value - gridMin));
+			line(imageData, 0, yValue, w, yValue, 255, 255, 255, 255, 1);
 		}
 	}
 }
@@ -1049,6 +1058,49 @@ function rocketindicatorcalculations() {
 }
 
 /**
+ * Utility function exposed to indicators allowing quick calculation of an SMA on any dataset
+ * @alias				rocketindicatorcalculations.calculateSMA(periods, data);
+ * @param	{int}		periods	
+ * @param	{Array}		data	The array of data to calculate SMA from...
+ * @return	{Array}
+ * @method
+ */
+rocketchart.prototype.calculateSMA = function(periods, data) {
+	var count = data.length;
+	var returnArray = [];
+	var total = 0;
+	
+	for (var j = 0; j<count; j++)
+	{
+		returnArray[j] = null;
+	}
+	
+	var startIndex = 0;
+	
+	for (var k = 0; k < count; k++)
+	{
+		if (data[k] != null)
+		{
+			startIndex = k + periods;
+			break;
+		}
+	}
+		
+	for (var i = startIndex; i < count; i++)
+	{
+		for (var j = 0; j < periods; j++)
+		{
+			total += data[i - j];
+		}
+		
+		returnArray[i] = total / periods;
+		total = 0;
+	}
+	
+	return returnArray;
+}
+
+/**
  * Accept an array of OHLC data and an array of parameters, then performs the simple moving average calculation.
  * @alias				MHUtils.objConvert(arr)
  * @param	{Array}		data	The array of OHLC data
@@ -1060,16 +1112,16 @@ rocketindicatorcalculations.prototype.simplemovingaverage = function (data, para
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
-	this._data = new Array();
+	this._data = [];
 	
 	if (this._series == undefined){
-		this._series = new Array();
+		this._series = [];
 		this._series[0] = {type: rocketseries.seriesType.LINE, title: "SMA", color: 0xFF0000};
 	}
 	
 	if (this._params == undefined){
 		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = new Array();
+		this._params = [];
 		this._params[0] = {name: 'Periods', type: 'int', value: 9};
 	}
 	
@@ -1078,9 +1130,9 @@ rocketindicatorcalculations.prototype.simplemovingaverage = function (data, para
 			var total = 0;
 			var j = 0;
 			var count = this._sourceData.length;
-			this._data = new Array();
+			this._data = [];
 			for (var i = 0; i<this._series.length; i++){
-				this._data[i] = new Array();
+				this._data[i] = [];
 			}
 			
 			//var smaValues:Array = new Array(count);
@@ -1110,16 +1162,16 @@ rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, pa
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
-	this._data = new Array();
+	this._data = [];
 	
 	if (this._series == undefined){
-		this._series = new Array();
+		this._series = [];
 		this._series[0] = {type: rocketseries.seriesType.LINE, title: "WMA", color: 0xFF0000};
 	}
 	
 	if (this._params == undefined){
 		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = new Array();
+		this._params = [];
 		this._params[0] = {name: 'Periods', type: 'int', value: 9, min: 2, max: 200, step: 1};
 	}
 	
@@ -1130,9 +1182,9 @@ rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, pa
 			var count = this._sourceData.length;
 			var sumofdays = Math.floor((this._params[0].value * (this._params[0].value + 1)) / 2);
 			
-			this._data = new Array();
+			this._data = [];
 			for (var i = 0; i<this._series.length; i++){
-				this._data[i] = new Array();
+				this._data[i] = [];
 			}
 			
 			for (j = 0; j<this._params[0].value; j++)
@@ -1160,10 +1212,10 @@ rocketindicatorcalculations.prototype.movingaverageconvergancedivergance = funct
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
-	this._data = new Array();
+	this._data = [];
 	
 	if (this._series == undefined){
-		this._series = new Array();
+		this._series = [];
 		this._series[0] = {type: rocketseries.seriesType.HISTOGRAM, title: "MACD Histogram", color: 0xFF0000};
 		this._series[1] = {type: rocketseries.seriesType.LINE, title: "MACD Trigger", color: 0xFFFFFF};
 		this._series[2] = {type: rocketseries.seriesType.LINE, title: "MACD", color: 0x666666};
@@ -1171,14 +1223,14 @@ rocketindicatorcalculations.prototype.movingaverageconvergancedivergance = funct
 	
 	if (this._params == undefined){
 		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = new Array();
+		this._params = [];
 		this._params[0] = {name: 'Slow EMA Periods', type: 'int', value: 9};
 		this._params[1] = {name: 'Fast EMA Periods', type: 'int', value: 12};
 		this._params[2] = {name: 'Trigger EMA Periods', type: 'int', value: 9};
 	}
 	
 	this.calculateEMA = function (data, periods) {
-		var returnArray = new Array();
+		var returnArray = [];
 		var total = 0;
 		var j = 0;
 		
@@ -1214,8 +1266,8 @@ rocketindicatorcalculations.prototype.movingaverageconvergancedivergance = funct
 	this.calculate = function(){
 		if (this._sourceData != null) {
 			var i = 0;
-			var closeArray = new Array();
-			var MACDValues = new Array();
+			var closeArray = [];
+			var MACDValues = [];
 			var count = this._sourceData.length;
 			
 			for (i = 0; i < count; i++){
@@ -1243,7 +1295,7 @@ rocketindicatorcalculations.prototype.movingaverageconvergancedivergance = funct
 			var triggerValues = this.calculateEMA(MACDValues, this._params[2].value);
 			
 			/** STAGE 3: Calculate Histogram */
-			var histogramValues = new Array();
+			var histogramValues = [];
 			
 			for (i = 0; i < count; i++)
 			{
@@ -1257,9 +1309,9 @@ rocketindicatorcalculations.prototype.movingaverageconvergancedivergance = funct
 				}
 			}
 			
-			this._data = new Array();
+			this._data = [];
 			for (var i = 0; i<this._series.length; i++){
-				this._data[i] = new Array();
+				this._data[i] = [];
 			}
 			
 			this._data[0] = histogramValues;
@@ -1272,20 +1324,102 @@ rocketindicatorcalculations.prototype.movingaverageconvergancedivergance = funct
 	this.calculate();
 };
 
+rocketindicatorcalculations.prototype.stochasticfast = function (data, params, series) {
+	this._params = params;
+	this._series = series;
+	this._sourceData = data;
+	this._data = [];
+	
+	if (this._params == undefined){
+		// Create default params, will also serve the purpose of declaring the parameters
+		this._params = [];
+		this._params[0] = {name: 'Periods', type: 'int', value: 14};
+		this._params[1] = {name: 'Overbought Guideline', type: 'int', value: 80}; // TODO: Add min, max, step values
+		this._params[2] = {name: 'Oversold Guideline', type: 'int', value: 20};
+	}
+	
+	if (this._series == undefined){
+		this._series = [];
+		this._series[0] = {type: rocketseries.seriesType.LINE, title: "SO Fast %K - " + this._params[0].value, color: 0xFF0000};
+		this._series[1] = {type: rocketseries.seriesType.LINE, title: "SO Fast %D - 3", color: 0x999999};
+	}
+	
+	this._constantLines = [];
+	this._constantLines[0] = {value: this._params[1].value, color: 0xFFFFFF};
+	this._constantLines[1] = {value: this._params[2].value, color: 0xFFFFFF};
+	
+	this.calculate = function(){
+		if (this._sourceData != null) {
+			var j = 0;
+			var count = this._sourceData.length;
+			
+			this._data = [];
+            for (var i = 0; i<this._series.length; i++){
+                this._data[i] = [];
+            }
+			
+			var pKValues = [];
+			var pDValues = [];
+			
+			for (j = 0; j<count; j++)
+			{
+				pKValues[j] = null;
+				pDValues[j] = null;
+			}
+			
+			var periods = this._params[0].value;
+			
+			var HighestHigh = 0;
+			var LowestLow = 5000;
+			
+			for (var i = periods; i < count; i++)
+			{
+				for (j=0; j < periods; j++)
+				{
+					if (this._sourceData[i-j]["high"] > HighestHigh)
+						HighestHigh = this._sourceData[i-j]["high"];
+						
+					if (this._sourceData[i-j]["low"] < LowestLow)
+						LowestLow = this._sourceData[i-j]["low"];
+				}
+				
+				if (HighestHigh != LowestLow)
+				{
+					pKValues[i] = ((this._sourceData[i]["close"] - LowestLow) / (HighestHigh - LowestLow)) * 100;
+				}
+				else
+				{
+					pKValues[i] = pKValues[i-1];
+				}
+				
+				HighestHigh = 0;
+				LowestLow = 5000;
+			}
+			
+			pDValues = rocketcharts.calculateSMA(3, pKValues);
+			
+			this._data[0] = pKValues;
+			this._data[1] = pDValues;
+		}
+	}
+	
+	this.calculate();
+};
+
 rocketindicatorcalculations.prototype.parabolicsar = function (data, params, series) {
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
-	this._data = new Array();
+	this._data = [];
 	
 	if (this._series == undefined){
-		this._series = new Array();
+		this._series = [];
 		this._series[0] = {type: rocketseries.seriesType.DOT, title: "SAR", color: 0xFF0000};
 	}
 	
 	if (this._params == undefined){
 		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = new Array();
+		this._params = [];
 		this._params[0] = {name: 'Acceleration', type: 'float', value: 0.02};
 		this._params[1] = {name: 'Acceleration Ceiling', type: 'float', value: 0.2};
 	}
@@ -1296,7 +1430,7 @@ rocketindicatorcalculations.prototype.parabolicsar = function (data, params, ser
 			var i = 0;
 			
 			for (var i = 0; i<this._series.length; i++){
-				this._data[i] = new Array();
+				this._data[i] = [];
 			}
 			
 			var RecordCount = this._sourceData.length;
@@ -1704,7 +1838,7 @@ function GenerateDialogs(element, indicators) {
 			modal: true,
 			buttons: {
 				"Add Indicator": function() {
-					var params = new Array();
+					var params = [];
 					$("#indicator-params input").each(function(i,e) {
 						
 						params[params.length] = {value: parseInt($(this).attr("value"))};
@@ -1779,7 +1913,7 @@ function formatRate(value) {
 }
 
 function GeneratePriceHistory(){
-	var data = new Array();
+	var data = [];
 	
 	var nOpen = 1.4316;
 	var nHigh = 1.4324;
