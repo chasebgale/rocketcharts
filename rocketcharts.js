@@ -923,11 +923,11 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 	var lastValue = 0;
 	var lastValueOld = 0;
 	var i = 0;
-	var X = 0;
+	
 	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
 	var barHeight = 0;
-	
+	var X = halfhorizSpacing;
 	var smoothing = false; //Preferences.EnableSmoothing;
 	
 	seriesLength = indicatorData[s].length;
@@ -974,9 +974,11 @@ rocketindicator.prototype.drawDot = function(imageData, verticalPixelPerPoint, g
 	var lastValue = 0;
 	var lastValueOld = 0;
 	var i = 0;
-	var X = 0;
+	
 	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
+	
+	var X = halfhorizSpacing;
 	
 	seriesLength = indicatorData[s].length;
 	
@@ -1002,7 +1004,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
 	var barHeight = 0;
-	var counter = 0;
+	var counter = halfhorizSpacing;
 	
 	var smoothing = false; //Preferences.EnableSmoothing;
 	
@@ -1042,9 +1044,9 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 			if (indicatorData[s][i] > 0)
 			{	
 				box(imageData, 
-					(horizSpacing * counter) - halfhorizSpacing + 1, 
+					counter - halfhorizSpacing + 1, 
 				 	h - (verticalPixelPerPoint * (indicatorData[s][i] - gridMin)), 
-				 	(horizSpacing * counter) + halfhorizSpacing - 1,
+				 	counter + halfhorizSpacing - 1,
 				 	h - (verticalPixelPerPoint * (0 - gridMin)), 
 				 	190, 
 				 	190,
@@ -1055,9 +1057,9 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 			else
 			{
 				box(imageData, 
-					(horizSpacing * counter) - halfhorizSpacing + 1, 
+					counter - halfhorizSpacing + 1, 
 				 	h - (verticalPixelPerPoint * (0 - gridMin)), 
-				 	(horizSpacing * counter) + halfhorizSpacing - 1,
+				 	counter + halfhorizSpacing - 1,
 				 	h - (verticalPixelPerPoint * (0 - gridMin)) + barHeight, 
 				 	190, 
 				 	190,
@@ -1067,7 +1069,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 			}
 		}
 		
-		counter++;
+		counter += horizSpacing;
 	}
 }
 
