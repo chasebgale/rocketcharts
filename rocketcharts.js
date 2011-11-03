@@ -11,7 +11,7 @@ function rocketchart() {
 	this.element;
 	this.indicators = [{name: 'Simple Moving Average', id: 'simplemovingaverage'},
 					   {name: 'Weighted Moving Average', id: 'weightedmovingaverage'},
-					   {name: 'Moving Average Convergance/Divergance', id: 'movingaverageconvergancedivergance'},
+					   {name: 'Moving Average Convergance/Divergance', id: 'movingaverageconvergencedivergence'},
 					   {name: 'Parabolic SAR', id: 'parabolicsar'},
 					   {name: 'Stochastic Oscillator Fast', id: 'stochasticfast'}];
 					   
@@ -24,7 +24,6 @@ function rocketchart() {
 	settings.backgroundColor = "#343838";
 	this.settings = settings;
 	
-	// TODO: Use View object to store horizontal spacing, etc and share between panels
 	var view = new Object();
 	view.horizontalPixelsPerPoint = 0;
 	view.halfHorizontalPixelsPerPoint = 0;
@@ -1235,7 +1234,7 @@ rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, pa
 	this.calculate();
 };
 
-rocketindicatorcalculations.prototype.movingaverageconvergancedivergance = function (data, params, series) {
+rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = function (data, params, series) {
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
