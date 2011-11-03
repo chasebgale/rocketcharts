@@ -339,17 +339,19 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 	
 	var displayedPoints = rocketcharts.view.endingPoint - rocketcharts.view.startingPoint; 
 	var horizontalPixelsPerPoint = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = Math.floor(horizontalPixelsPerPoint / 2.0) - 1;
+	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
 	
 	var point = -1;
 	
 	if (x > dateAxisWidth) {
 		// flag the removal of info box
+		return;
 	} else {
 		point = Math.floor(x / horizontalPixelsPerPoint);
 	}
 	
 	var pointX = (point * horizontalPixelsPerPoint) + halfhorizSpacing;
+	point = point + rocketcharts.view.startingPoint;
 	
 	var height = 0;
 	var width = 0;
