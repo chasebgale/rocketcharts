@@ -27,6 +27,7 @@ function rocketchart() {
 	// TODO: Use View object to store horizontal spacing, etc and share between panels
 	var view = new Object();
 	view.horizontalPixelsPerPoint = 0;
+	view.halfHorizontalPixelsPerPoint = 0;
 	view.startingPoint = 0;
 	view.endingPoint = 0;
 	this.view = view;
@@ -336,9 +337,8 @@ rocketchart.prototype.resize = function(w, h){
 rocketchart.prototype.headsUpDisplay = function(x, y){
 	var dateAxisWidth = this.width - this.priceAxisWidth;
 	
-	// For now displayedPoints = all ticks, in the future whatever zoom or view we have set
-	var displayedPoints = this.data[0].data.length; 
-	var horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
+	var displayedPoints = rocketcharts.view.endingPoint - rocketcharts.view.startingPoint; 
+	var horizontalPixelsPerPoint = rocketcharts.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = Math.floor(horizontalPixelsPerPoint / 2.0) - 1;
 	
 	var point = -1;
@@ -574,6 +574,7 @@ rocketchart.prototype.draw = function(){
 	var displayedPoints = rocketcharts.view.endingPoint - rocketcharts.view.startingPoint; //this.data[0].data.length; 
 	var dateAxisWidth = this.width - this.priceAxisWidth;
 	rocketcharts.view.horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
+	rocketcharts.view.halfHorizontalPixelsPerPoint = Math.round(rocketcharts.view.horizontalPixelsPerPoint / 2.0) - 1;
 	
 	// Draw panels:
 	for (var i=0; i < this.panels.length; i++) {
@@ -702,7 +703,7 @@ rocketseries.prototype.draw = function(imageData, verticalPixelPerPoint, gridMin
 }
 
 rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPoint, gridMin, w, h){
-	var X = 1;
+	
 	var yCloseOld = 0;
 	
 	var valueOpen;
@@ -717,8 +718,9 @@ rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPo
 	
 	var startTick = 0;//_sizing.StartingTick;
 	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = Math.round(horizSpacing / 2.0) - 1;
+	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
 	var lineAreaStart = h;
+	var X = halfhorizSpacing;
 	
 	//if (startTick < 0)
 	//	startTick = 0;
@@ -922,7 +924,7 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 	var i = 0;
 	var X = 0;
 	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = horizSpacing / 2;
+	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
 	var barHeight = 0;
 	
 	var smoothing = false; //Preferences.EnableSmoothing;
@@ -973,7 +975,7 @@ rocketindicator.prototype.drawDot = function(imageData, verticalPixelPerPoint, g
 	var i = 0;
 	var X = 0;
 	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = horizSpacing / 2;
+	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
 	
 	seriesLength = indicatorData[s].length;
 	
@@ -997,7 +999,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 	var i = 0;
 	var x = 0;
 	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = Math.round(horizSpacing / 2);
+	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
 	var barHeight = 0;
 	var counter = 0;
 	
