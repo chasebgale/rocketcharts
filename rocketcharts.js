@@ -12,7 +12,8 @@ function rocketchart() {
 	this.indicators = [{name: 'Simple Moving Average', id: 'simplemovingaverage'},
 					   {name: 'Weighted Moving Average', id: 'weightedmovingaverage'},
 					   {name: 'Moving Average Convergance/Divergance', id: 'movingaverageconvergancedivergance'},
-					   {name: 'Parabolic SAR', id: 'parabolicsar'}]
+					   {name: 'Parabolic SAR', id: 'parabolicsar'},
+					   {name: 'Stochastic Oscillator Fast', id: 'stochasticfast'}];
 					   
 	this.priceAxisWidth = 75;
 					   
@@ -27,7 +28,7 @@ function rocketchart() {
 	var view = new Object();
 	view.horizontalPixelsPerPoint = 0;
 	view.startingPoint = 0;
-	view.visiblePoints = -1;
+	view.endingPoint = 0;
 	this.view = view;
 	
 	this.initComplete = function() {};
@@ -64,11 +65,11 @@ rocketchart.prototype.init = function(element, settings){
 	});
 	
 	// Keeping this for future implementation of drag 'handles' via JQueryUI
-	this.element.bind( "resize", function(event, ui) {
+	panelsElement.bind( "resize", function(event, ui) {
 		rocketcharts.resize(ui.size.width, ui.size.height);
 		rocketcharts.draw();
 	});
-	this.element.bind("mousedown", function(event, ui) {
+	panelsElement.bind("mousedown", function(event, ui) {
 		$(this).bind( "mousemove", function(event, ui) {
 			
 			var relativeX = event.pageX - this.offsetLeft;
@@ -86,7 +87,7 @@ rocketchart.prototype.init = function(element, settings){
 		//rocketcharts.draw();
 		return false; // Prevents browser from changing cursor to 'I-Beam', thinking we are trying to select text
 	});
-	this.element.bind("mouseup", function(event, ui) {
+	panelsElement.bind("mouseup", function(event, ui) {
 		$(this).unbind( "mousemove" );
 		this.style.cursor = 'default';
 		rocketcharts.mouseDown = false;
@@ -124,12 +125,13 @@ rocketchart.prototype.init = function(element, settings){
 		GenerateDialogs(this.element, this.indicators);
 	}
 	
-	// Experimental: Floating Date Axis
 	this.element.append("<div style=\"height: 15px; width: 100%; background-color: " + rgbToHex(this.settings.backgroundColor.r, this.settings.backgroundColor.g, this.settings.backgroundColor.b) + ";\">" +
 							"<canvas id=\"dateAxisCanvas\" width=\"" + this.width + "\" height=\"15\"></canvas>" +
 						"</div>");
 	
 	this.dateAxisCanvas = document.getElementById("dateAxisCanvas");
+	
+	this.element.append("<div id=\"zoomSlider\" style=\"height: 15px; width: 100%; background-color: " + rgbToHex(this.settings.backgroundColor.r, this.settings.backgroundColor.g, this.settings.backgroundColor.b) + ";\">" + "</div>");
 	
 	// Experimental: Raster Text
 	/*
@@ -509,6 +511,22 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 	// Keep track of all series data in a root array for quick lookups
 	this.data[this.data.length] = {title: title, data: data};
 	this.panels[panelID].addSeries(new rocketseries(this.data[this.data.length - 1].data, type, title, style));
+	
+	rocketcharts.view.startingPoint = Math.round(data.length / 2);
+	rocketcharts.view.endingPoint = data.length;
+	
+	$("#zoomSlider").slider({
+		range: true,
+		min: 0,
+		max: data.length,
+		values: [ Math.round(data.length / 2), data.length ],
+		slide: function( event, ui ) {
+			rocketcharts.view.startingPoint = ui.values[ 0 ];
+			rocketcharts.view.endingPoint = ui.values[ 1 ];
+			rocketcharts.draw();
+		}
+	});
+	
 	this.draw();
 };
 
@@ -552,6 +570,11 @@ rocketchart.prototype.draw = function(){
 	
 	var height = 0;
 	
+	// For now displayedPoints = all ticks, in the future whatever zoom or view we have set
+	var displayedPoints = rocketcharts.view.endingPoint - rocketcharts.view.startingPoint; //this.data[0].data.length; 
+	var dateAxisWidth = this.width - this.priceAxisWidth;
+	rocketcharts.view.horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
+	
 	// Draw panels:
 	for (var i=0; i < this.panels.length; i++) {
 		
@@ -575,11 +598,9 @@ rocketchart.prototype.draw = function(){
 	// Draw date axis:
 	var context = this.dateAxisCanvas.getContext("2d");
 	var imageData = context.createImageData(this.width, 15);
-	var dateAxisWidth = this.width - this.priceAxisWidth;
 	
-	// For now displayedPoints = all ticks, in the future whatever zoom or view we have set
-	var displayedPoints = this.data[0].data.length; 
-	var horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
+	
+	
 	//var step = Math.floor(displayedPoints / Math.floor(dateAxisWidth / 150));
 	//var minorStep = Math.floor(step / 10); //Math.ceil(displayedPoints / (dateAxisWidth / 5));
 	
@@ -588,7 +609,7 @@ rocketchart.prototype.draw = function(){
 	var averageDateSpace = (this.data[0].data[displayedPoints - 1].date.length * 6) + 20;
 	
 	var minorStep = 4;
-	var majorStep = Math.ceil(averageDateSpace / (minorStep * horizontalPixelsPerPoint));
+	var majorStep = Math.ceil(averageDateSpace / (minorStep * rocketcharts.view.horizontalPixelsPerPoint));
 	//var majorStep = Math.ceil(150 / (minorStep * horizontalPixelsPerPoint));
 	
 	var k = 0;
@@ -597,7 +618,7 @@ rocketchart.prototype.draw = function(){
 	for (var i=1; i < displayedPoints; i++) {
 		
 		if (i % minorStep == 0) {
-			k = i * horizontalPixelsPerPoint;
+			k = i * rocketcharts.view.horizontalPixelsPerPoint;
 			line(imageData, k, 0, k, 1, 100, 100, 100, 0xFF);
 			tickCount++;
 			
@@ -695,21 +716,21 @@ rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPo
 	var yvalueClose;
 	
 	var startTick = 0;//_sizing.StartingTick;
-	var horizSpacing = w / this.data.length; //(unscaledWidth - _priceAxis.axisWidth) / _sizing.VisibleTicks;    _sizing.HorizontalPixelsPerPoint;
+	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = Math.round(horizSpacing / 2.0) - 1;
 	var lineAreaStart = h;
 	
-	if (startTick < 0)
-		startTick = 0;
+	//if (startTick < 0)
+	//	startTick = 0;
 	
-	var dataCount = this.data.length; //_sizing.StartingTick + _sizing.VisibleTicks;
+	//var dataCount = this.data.length; //_sizing.StartingTick + _sizing.VisibleTicks;
 	
 	//if (dataCount > _dataSource.length)
 	//	dataCount = _dataSource.length;
 	
 	var i = 0;
 	
-	for (i = startTick; i < dataCount; i++) //dataCount
+	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++) //dataCount
 	{			
 		if ( this.data[i]["empty"] != true ) // Null means a market gap
 		{
@@ -816,12 +837,14 @@ rocketpanel.prototype.calculate = function(){
 	this._gridMax = -100000;
 	this._gridMin = 100000;
 	
+	
+	
 	for (var i=0; i < this._series.length; i++)
 	{
-		var len = this._series[i].data.length; //_sizing.StartingTick + _sizing.VisibleTicks;
-		var startValue = 0;//_sizing.StartingTick;
+		//var len = this._series[i].data.length; //_sizing.StartingTick + _sizing.VisibleTicks;
+		//var startValue = 0;//_sizing.StartingTick;
 		
-		for (var j = startValue; j < len; j++)
+		for (var j = rocketcharts.view.startingPoint; j < rocketcharts.view.endingPoint; j++)
 		{
 			
 			if (this._series[i].data[j]["high"] > this._gridMax)
@@ -836,10 +859,10 @@ rocketpanel.prototype.calculate = function(){
 	{
 		for (var j=0; j < this._indicators[i]._indicator._series.length; j++){
 			
-			var len = this._indicators[i]._indicator._data[j].length; //_sizing.StartingTick + _sizing.VisibleTicks;
-			var startValue = 0;//_sizing.StartingTick;
+			//var len = this._indicators[i]._indicator._data[j].length; //_sizing.StartingTick + _sizing.VisibleTicks;
+			//var startValue = 0;//_sizing.StartingTick;
 			
-			for (var k = startValue; k < len; k++){
+			for (var k = rocketcharts.view.startingPoint; k < rocketcharts.view.endingPoint; k++){
 				if (this._indicators[i]._indicator._data[j][k] > this._gridMax)
 					this._gridMax = this._indicators[i]._indicator._data[j][k];
 					
@@ -898,7 +921,7 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 	var lastValueOld = 0;
 	var i = 0;
 	var X = 0;
-	var horizSpacing = w / this._indicator._sourceData.length;
+	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = horizSpacing / 2;
 	var barHeight = 0;
 	
@@ -916,7 +939,7 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 	var n:uint=(ac<<24)+(r1<<16)+(g1<<8)+b1;
 	*/
 	
-	for (i = 0; i < seriesLength; i++)
+	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++)
 	{
 		if (indicatorData[s][i] != null)
 		{
@@ -949,12 +972,12 @@ rocketindicator.prototype.drawDot = function(imageData, verticalPixelPerPoint, g
 	var lastValueOld = 0;
 	var i = 0;
 	var X = 0;
-	var horizSpacing = w / this._indicator._sourceData.length;
+	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = horizSpacing / 2;
 	
 	seriesLength = indicatorData[s].length;
 	
-	for (i = 0; i < seriesLength; i++)
+	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++)
 	{
 		if (indicatorData[s][i] != null)
 		{
@@ -973,7 +996,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 	var lastValue = 0;
 	var i = 0;
 	var x = 0;
-	var horizSpacing = w / this._indicator._sourceData.length;
+	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = Math.round(horizSpacing / 2);
 	var barHeight = 0;
 	var counter = 0;
@@ -992,7 +1015,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 	var n:uint=(ac<<24)+(r1<<16)+(g1<<8)+b1;
 	*/
 	
-	for (i = 0; i < seriesLength; i++)
+	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++)
 	{
 		if (indicatorData[s][i] != null)
 		{

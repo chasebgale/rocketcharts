@@ -1,8 +1,10 @@
 <html>
 <head>
 <script type="text/javascript" src="rocketcharts.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
 <script type="text/javascript" src="http://www.rocketcharts.com/js/date.format.js"></script>
+<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css" type="text/css" media="all">
 <script type="text/javascript">
    $(document).ready(function () {    
  
@@ -246,7 +248,7 @@
 rocketcharts.addSeries("GOOG", googData, undefined, style);
 // rocketcharts.addIndicator(id, params, series, panel);
 rocketcharts.addIndicator("parabolicsar", undefined, 0, 0);
-rocketcharts.addIndicator("movingaverageconvergancedivergance", undefined, 0);
+rocketcharts.addIndicator("stochasticfast", undefined, 0);
 }); 
 // ]]>
 </script>
