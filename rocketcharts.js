@@ -516,6 +516,7 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 	rocketcharts.view.startingPoint = Math.round(data.length / 2);
 	rocketcharts.view.endingPoint = data.length;
 	
+	/* OLD JQUERY UI SLIDER
 	$("#zoomSlider").slider({
 		range: true,
 		min: 0,
@@ -526,6 +527,32 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 			rocketcharts.view.endingPoint = ui.values[ 1 ];
 			rocketcharts.draw();
 		}
+	});
+	*/
+	
+	$("#zoomSlider").rangeSlider({
+		  defaultValues:{min:Math.round(data.length / 2), max:data.length - 1},
+		  bounds:{min:0, max:data.length - 1},
+		  wheelMode: null,
+		  wheelSpeed: 8,
+		  arrows: true,
+		  valueLabels: "change",
+		  formatter: function(value){
+			  if (rocketcharts.data.length > 0) {
+				  return rocketcharts.data[0].data[Math.round(value)].date;
+			  } else {
+				  return Math.round(value);
+			  }
+		  },
+		  durationIn: 0,
+		  durationOut: 400,
+		  delayOut: 200
+		});
+	
+	$("#zoomSlider").bind("valuesChanging", function(event, ui){
+		rocketcharts.view.startingPoint = Math.round(ui.values["min"]);
+		rocketcharts.view.endingPoint = Math.round(ui.values["max"]);
+		rocketcharts.draw();
 	});
 	
 	this.draw();
@@ -628,7 +655,7 @@ rocketchart.prototype.draw = function(){
 				//k = i * horizontalPixelsPerPoint;
 				line(imageData, k, 0, k, 3, 255,255,255, 0xFF);
 				//rasterText(imageData, this.data[0].data[i].date, k - 60, 6);
-				rasterText(imageData, this.data[0].data[i].date, k - (averageDateSpace / 2) + 10, 6);
+				rasterText(imageData, this.data[0].data[rocketcharts.view.startingPoint + i].date, k - (averageDateSpace / 2) + 10, 6);
 			}
 		}
 		
