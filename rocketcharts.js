@@ -551,7 +551,7 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 	
 	$("#zoomSlider").bind("valuesChanging", function(event, ui){
 		rocketcharts.view.startingPoint = Math.round(ui.values["min"]);
-		rocketcharts.view.endingPoint = Math.round(ui.values["max"]);
+		rocketcharts.view.endingPoint = Math.round(ui.values["max"]) + 1;
 		rocketcharts.draw();
 	});
 	
@@ -647,7 +647,7 @@ rocketchart.prototype.draw = function(){
 	for (var i=1; i < displayedPoints; i++) {
 		
 		if (i % minorStep == 0) {
-			k = i * rocketcharts.view.horizontalPixelsPerPoint;
+			k = (i * rocketcharts.view.horizontalPixelsPerPoint) + rocketcharts.view.halfHorizontalPixelsPerPoint;
 			line(imageData, k, 0, k, 1, 100, 100, 100, 0xFF);
 			tickCount++;
 			

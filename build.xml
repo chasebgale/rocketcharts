@@ -10,6 +10,8 @@
 
 	  <sources dir="${basedir}/libs">
         <file name="date.format.js"/>
+	  	<file name="jQAllRangeSliders-min.js"/>
+	  	<file name="jQRangeSlider-min.js"/>
       </sources>
 
       <sources dir="${basedir}/">
