@@ -14,7 +14,14 @@ function rocketchart() {
 					   {name: 'Moving Average Convergance/Divergance', id: 'movingaverageconvergencedivergence'},
 					   {name: 'Parabolic SAR', id: 'parabolicsar'},
 					   {name: 'Stochastic Oscillator Fast', id: 'stochasticfast'}];
-					   
+	
+	
+	// Used internally to assign IDs to indicators across panel boundaries,
+	// i.e. indicatorIndex[0] = {panelID: 1, indicatorID: 0}
+	// so I devs call removeIndicator(0), rather than looking up a panel and 
+	// calling remove on the panel directly.
+	this.indicatorIndex = [];
+	
 	this.priceAxisWidth = 75;
 					   
 	var settings = new Object();
@@ -565,12 +572,13 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
  * @param	{Array}		params	The array of user-supplied parameters specific to the indicator
  * @param	{int}		series	The id of the series' data we want to calculate this indicator from
  * @param	{int}		panel	the id of the panel to add this series to, if undefined, we create a new panel
- * @return	{void}
+ * @return	{int}		The ID in the indicatorIndex that points to this indicator
  * @method
  */
 rocketchart.prototype.addIndicator = function(id, params, series, panel){
 
 	var panelID = -1;
+	var indicatorID = -1;
 	
 	if ((panel == undefined) || (panel == -1)){
 		panelID = this.addPanel();
@@ -582,9 +590,18 @@ rocketchart.prototype.addIndicator = function(id, params, series, panel){
 		series = 0;
 	}
 	
-	this.panels[panelID].addIndicator(new rocketindicator(id, this.data[series].data, params));
+	indicatorID = this.panels[panelID].addIndicator(new rocketindicator(id, this.data[series].data, params));
+	this.indicatorIndex[this.indicatorIndex.length] = {panel: panelID, indicator: indicatorID};
 	this.draw();
+	
+	return (this.indicatorIndex.length - 1);
 };
+
+rocketchart.prototype.removeIndicator = function(id) {
+	this.panels[this.indicatorIndex[id].panel]._indicators.splice(this.indicatorIndex[id].indicator, 1);
+	this.indicatorIndex.splice(id, 1);
+	this.draw();
+}
 
 
 /**
@@ -860,6 +877,7 @@ rocketpanel.prototype.addSeries = function(series){
 
 rocketpanel.prototype.addIndicator = function(indicator){
 	this._indicators[this._indicators.length] = indicator;
+	return (this._indicators.length - 1);
 };
 
 rocketpanel.prototype.calculate = function(){
@@ -1814,6 +1832,10 @@ function randomInRange(minVal,maxVal)
  * Really, we should just have the methods to add indicators/series/etc and have
  * users develop a gui to consume said methods... but for now we'll keep it; better I guess
  * to illustate 'here is a simple way of doing it.'
+ * 
+ * UPDATE: Decided to keep it!... what about people with blogs that want to add a financial chart, with no 
+ * interest or skillset to develop a UI to manage indicators? Upon reflection, there are tons of use
+ * cases where a skeleton ui would be advantageous 
  */
 function GenerateDialogs(element, indicators) {
 	var addIndicatorDialog = "<div id=\"rocketcharts-addIndicator-dialog-form\" title=\"Add New Indicator\">" +
@@ -1874,6 +1896,9 @@ function GenerateDialogs(element, indicators) {
 			  
 			  switch (indicator._params[i].type) {
 			  	case "int":
+			  		indicatorMarkup += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+			  		break;
+			  	default:
 			  		indicatorMarkup += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
 			  		break;
 			  }

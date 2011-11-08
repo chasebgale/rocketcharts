@@ -8,9 +8,22 @@
     <jscomp compilationLevel="simple" warning="default" 
             debug="true" output="${basedir}/release/rocketcharts.js">
 
+    	<!-- NOTE: Build order is important
+    		 NOTE: The jQueryUI stuff is temporary until the next milestone, 
+    		 		when the spinner control is included in the main distro -->
+    	
 	  <sources dir="${basedir}/libs">
-        <file name="date.format.js"/>
-	  	<file name="jQAllRangeSliders-min.js"/>
+	  	<file name="jquery.ui.core.js"/>
+	  	<file name="jquery.ui.widget.js"/>
+	  	<file name="jquery.ui.button.js"/>
+	  	<file name="jquery.ui.spinner.js"/>
+	  	<file name="jquery.ui.mouse.js"/>
+	  	<file name="jquery.ui.draggable.js"/>
+  		<file name="jquery.ui.position.js"/>
+  		<file name="jquery.ui.resizable.js"/>
+  		<file name="jquery.ui.dialog.js"/>
+	  	<file name="jquery.ui.tabs.js"/>
+	  	<file name="date.format.js"/>
 	  	<file name="jQRangeSlider-min.js"/>
       </sources>
 
