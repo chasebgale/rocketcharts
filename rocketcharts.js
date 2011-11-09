@@ -885,7 +885,7 @@ rocketpanel.prototype.calculate = function(){
 	this._gridMax = -100000;
 	this._gridMin = 100000;
 	
-	
+	var value = 0;
 	
 	for (var i=0; i < this._series.length; i++)
 	{
@@ -911,11 +911,15 @@ rocketpanel.prototype.calculate = function(){
 			//var startValue = 0;//_sizing.StartingTick;
 			
 			for (var k = rocketcharts.view.startingPoint; k < rocketcharts.view.endingPoint; k++){
-				if (this._indicators[i]._indicator._data[j][k] > this._gridMax)
-					this._gridMax = this._indicators[i]._indicator._data[j][k];
-					
-				if (this._indicators[i]._indicator._data[j][k] < this._gridMin)
-					this._gridMin = this._indicators[i]._indicator._data[j][k];
+				value = this._indicators[i]._indicator._data[j][k];
+				
+				if (value != null) {
+					if (value > this._gridMax)
+						this._gridMax = value;
+						
+					if (value < this._gridMin)
+						this._gridMin = value;
+				}
 			}
 		}
 	}
