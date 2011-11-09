@@ -977,6 +977,8 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 	
 	seriesLength = indicatorData[s].length;
 	
+	var seriesColor = hexToRgb(intToHex(this._indicator._series[s].color));
+	
 	// ENSURE COLOR is 100% ALPHA:
 	/*
 	var c = indicator.seriesColor(s);
@@ -1001,7 +1003,7 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 				}
 				else
 				{
-					line(imageData, X - horizSpacing, lastValueOld, X, lastValue, 255, 255, 255, 255, 2);
+					line(imageData, X - horizSpacing, lastValueOld, X, lastValue, seriesColor.r, seriesColor.g, seriesColor.b, 255, 2);
 				}
 				lastValue = h - (verticalPixelPerPoint * (indicatorData[s][i] - gridMin));							
 			}
@@ -1026,13 +1028,14 @@ rocketindicator.prototype.drawDot = function(imageData, verticalPixelPerPoint, g
 	var X = halfhorizSpacing;
 	
 	seriesLength = indicatorData[s].length;
+	var seriesColor = hexToRgb(intToHex(this._indicator._series[s].color));
 	
 	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++)
 	{
 		if (indicatorData[s][i] != null)
 		{
 			lastValue = h - (verticalPixelPerPoint * (indicatorData[s][i] - gridMin));
-			box(imageData, X - 1, lastValue - 1, X, lastValue, 255, 255, 255, 255);
+			box(imageData, X - 1, lastValue - 1, X, lastValue, seriesColor.r, seriesColor.g, seriesColor.b, 255);
 		}
 		
 		X += horizSpacing;
@@ -1054,6 +1057,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 	var smoothing = false; //Preferences.EnableSmoothing;
 	
 	seriesLength = indicatorData[s].length;
+	var seriesColor = hexToRgb(intToHex(this._indicator._series[s].color));
 	
 	// ENSURE COLOR is 100% ALPHA:
 	/*
@@ -1093,9 +1097,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 				 	h - (verticalPixelPerPoint * (indicatorData[s][i] - gridMin)), 
 				 	counter + halfhorizSpacing - 1,
 				 	h - (verticalPixelPerPoint * (0 - gridMin)), 
-				 	190, 
-				 	190,
-				 	190,
+				 	seriesColor.r, seriesColor.g, seriesColor.b,
 				 	0xFF, 
 				 	false);
 			}
@@ -1106,9 +1108,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 				 	h - (verticalPixelPerPoint * (0 - gridMin)), 
 				 	counter + halfhorizSpacing - 1,
 				 	h - (verticalPixelPerPoint * (0 - gridMin)) + barHeight, 
-				 	190, 
-				 	190,
-				 	190,
+				 	seriesColor.r, seriesColor.g, seriesColor.b,
 				 	0xFF, 
 				 	false);
 			}
@@ -1898,8 +1898,11 @@ function GenerateDialogs(element, indicators) {
 			  	case "int":
 			  		indicatorMarkup += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
 			  		break;
+			  	case "float":
+			  		indicatorMarkup += "<input class=\"rocketcharts-input-float\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+			  		break;
 			  	default:
-			  		indicatorMarkup += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+			  		indicatorMarkup += "<input type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
 			  		break;
 			  }
 			  						
@@ -1907,7 +1910,20 @@ function GenerateDialogs(element, indicators) {
 			
 			$( "#indicator-params" ).append(indicatorMarkup);
 			
-			$('.rocketcharts-input-int').spinner({ min: 0, max: 100, increment: 'fast' });
+			$('.rocketcharts-input-int').spinner({ min: 0, max: 100, step: 1 });
+			
+			var precision = 0;
+			var stepString = "0.";
+			$('.rocketcharts-input-float').each(function (i) {
+				stepString = "0.";
+				precision = $(this).attr('value').split('.')[1].length - 1;
+				for (var i=0; i < precision; i++) {
+					stepString = stepString + "0";
+				}
+				stepString = stepString + "1";
+				$(this).spinner({min: 0, max: 100, step: stepString});
+			});
+			//$('.rocketcharts-input-float').spinner({ min: 0, max: 100, step: 0.1 });
 			
 		});
 		
@@ -1981,6 +1997,11 @@ function toHex(N) {
  return "0123456789ABCDEF".charAt((N-N%16)/16)
       + "0123456789ABCDEF".charAt(N%16);
 }
+
+function intToHex(i) {  
+    var hex = parseInt(i).toString(16);  
+    return (hex.length < 2) ? "0" + hex : hex;  
+}  
 
 function formatRate(value) {
 	var formattedString = "";
