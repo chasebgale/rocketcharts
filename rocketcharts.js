@@ -13,6 +13,7 @@ function rocketchart() {
 					   {name: 'Weighted Moving Average', id: 'weightedmovingaverage'},
 					   {name: 'Moving Average Convergance/Divergance', id: 'movingaverageconvergencedivergence'},
 					   {name: 'Parabolic SAR', id: 'parabolicsar'},
+					   {name: 'Bollinger Bands', id: 'bollingerbands'},
 					   {name: 'Stochastic Oscillator Fast', id: 'stochasticfast'}];
 	
 	
@@ -1395,6 +1396,80 @@ rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 			this._data[1] = triggerValues;
 			this._data[2] = MACDValues;
 			
+		}
+	}
+	
+	this.calculate();
+};
+
+rocketindicatorcalculations.prototype.bollingerbands = function (data, params, series) {
+	this._params = params;
+	this._series = series;
+	this._sourceData = data;
+	this._data = [];
+	
+	if (this._series == undefined){
+		this._series = [];
+		this._series[0] = {type: rocketseries.seriesType.LINE, title: "BB Upper", color: 0xFFFFFF};
+		this._series[1] = {type: rocketseries.seriesType.LINE, title: "BB Middle", color: 0xFFFFFF};
+		this._series[2] = {type: rocketseries.seriesType.LINE, title: "BB Lower", color: 0xFFFFFF};
+	}
+	
+	if (this._params == undefined){
+		// Create default params, will also serve the purpose of declaring the parameters
+		this._params = [];
+		this._params[0] = {name: 'Periods', type: 'int', value: 9};
+		this._params[1] = {name: 'Standard Deviations', type: 'int', value: 2};
+	}
+	
+	this.calculate = function(){
+		if (this._sourceData != null) {
+			var total = 0;
+			var totalDeviation = 0;
+			var deviation = 0;
+			var j = 0;
+			var count = this._sourceData.length;
+			
+			var upper = [];
+			var smaValues = [];
+			var lower = [];
+			
+			
+			for (j = 0; j<this._params[0].value; j++)
+			{
+				upper[j] = null;
+				smaValues[j] = null;
+				lower[j] = null;
+			}
+			
+			for (var i = this._params[0].value - 1; i < count; i++)
+			{
+				// Calculate SMA:
+				for (j = 0; j < this._params[0].value; j++)
+				{
+					total += this._sourceData[i - j]["close"];
+				}
+				
+				smaValues[i] = total / this._params[0].value;
+				
+				// Calculate Deviation:
+				for (j = 0; j < this._params[0].value; j++)
+				{
+					totalDeviation += Math.pow((this._sourceData[i - j]["close"] - smaValues[i]), 2);
+				}
+				
+				deviation = Math.sqrt(totalDeviation / this._params[0].value);
+				
+				upper[i] = smaValues[i] + (deviation * this._params[1].value);
+				lower[i] = smaValues[i] - (deviation * this._params[1].value);
+				
+				total = 0;
+				totalDeviation = 0;
+			}
+			
+			this._data[0] = upper;
+			this._data[1] = smaValues;
+			this._data[2] = lower;
 		}
 	}
 	
