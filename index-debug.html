@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="./style/jquery.ui.all.css">
 
 <script type="text/javascript">
+    var rocketcharts = new Rocketchart();
    $(document).ready(function () {    
  
 		// Look and feel of the chart
@@ -34,7 +35,7 @@
       
       // User created indicator:
 		rocketcharts.indicators[rocketcharts.indicators.length] = {name: "Custom Indicator", id: "customindicator"};
-		rocketindicatorcalculations.prototype.customindicator = function (data, params, series) {
+		Rocketindicatorcalculations.prototype.customindicator = function (data, params, series) {
 			this._params = params;
 			this._series = series;
 			this._sourceData = data;
@@ -42,7 +43,7 @@
 			
 			if (this._series == undefined){
 				this._series = [];
-				this._series[0] = {type: rocketseries.seriesType.LINE, title: "CUSTOM", color: 0xFF0000};
+				this._series[0] = {type: 'line', title: "CUSTOM", color: 0xFF0000};
 			}
 			
 			if (this._params == undefined){
