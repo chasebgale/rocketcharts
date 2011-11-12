@@ -25,14 +25,14 @@ function rocketchart() {
 	
 	this.priceAxisWidth = 75;
 					   
-	var settings = new Object();
+	var settings = {};
 	settings.minimumPanelHeight = 200;
 	settings.defaultUpColor = "#00EAFF";
 	settings.defaultDownColor = "#005F6B";
 	settings.backgroundColor = "#343838";
 	this.settings = settings;
 	
-	var view = new Object();
+	var view = {};
 	view.horizontalPixelsPerPoint = 0;
 	view.halfHorizontalPixelsPerPoint = 0;
 	view.startingPoint = 0;
@@ -151,7 +151,7 @@ rocketchart.prototype.init = function(element, settings){
 	fontImage.onload = function(){
 		
 		bufferContext.drawImage(fontImage, 0, 0, 566, 7);
-		rocketcharts.fontPoints = new Array();
+		rocketcharts.fontPoints = [];
 		
 		var w = 566;
 		var fontPixelArray = bufferContext.getImageData(0, 0, w, 7);
@@ -163,7 +163,7 @@ rocketchart.prototype.init = function(element, settings){
 		var arrayPointer;
 		
 		for (var i=0; i < 95; i++) {
-			rocketcharts.fontPoints[i] = new Array();
+			rocketcharts.fontPoints[i] = [];
 		}
 		
 		for (var i=0; i < fontPixelData.length; i++) {
@@ -704,7 +704,7 @@ function rocketseries(data, type, title, style){
 	this.style = style;
 	
 	if (this.style == undefined) {
-		this.style = new Object();
+		this.style = {};
 	}
 	
 	if (this.style.UpColor == undefined) {
