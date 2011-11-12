@@ -4,7 +4,7 @@
  * @return	{bool}
  * @method
  */
-function rocketchart() {
+function Rocketchart() {
 	this.panels = [];
 	this.panelOverlays = [];
 	this.data = [];
@@ -19,25 +19,25 @@ function rocketchart() {
 	
 	// Used internally to assign IDs to indicators across panel boundaries,
 	// i.e. indicatorIndex[0] = {panelID: 1, indicatorID: 0}
-	// so I devs call removeIndicator(0), rather than looking up a panel and 
+	// so I can call removeIndicator(0), rather than looking up a panel and
 	// calling remove on the panel directly.
 	this.indicatorIndex = [];
 	
 	this.priceAxisWidth = 75;
 					   
-	var settings = new Object();
-	settings.minimumPanelHeight = 200;
-	settings.defaultUpColor = "#00EAFF";
-	settings.defaultDownColor = "#005F6B";
-	settings.backgroundColor = "#343838";
-	this.settings = settings;
+	this.settings = {
+		minimumPanelHeight:200,
+		defaultUpColor:"#00EAFF",
+		defaultDownColor:"#005F6B",
+		backgroundColor:"#343838"
+	};
 	
-	var view = new Object();
-	view.horizontalPixelsPerPoint = 0;
-	view.halfHorizontalPixelsPerPoint = 0;
-	view.startingPoint = 0;
-	view.endingPoint = 0;
-	this.view = view;
+	this.view = {
+		horizontalPixelsPerPoint : 0,
+		halfHorizontalPixelsPerPoint : 0,
+		startingPoint : 0,
+		endingPoint : 0
+	};
 	
 	this.initComplete = function() {};
 	
@@ -52,14 +52,14 @@ function rocketchart() {
  * @return	{void}
  * @method
  */
-rocketchart.prototype.init = function(element, settings){
+Rocketchart.prototype.init = function(element, settings){
+	var self = this;
+	// store parent element after looking it up with jquery
+	self.element = $(element);
+	self.width = self.element.width();
 	
-	// store global variable after looking it up with jquery
-	this.element = $(element);
-	this.width = this.element.width();
-	
-	this.element.append("<div id=\"panels\" style=\"height: 100%; width: 100%; position: relative;\"></div>");
-	var panelsElement = $("#panels");
+	self.element.append("<div id=\"panels\" style=\"height: 100%; width: 100%; position: relative;\"></div>");
+	var panelsElement = $("#panels", self.element);
 	
 	panelsElement.css("overflow", "auto");
 	panelsElement.css("margin", "0px");
@@ -68,14 +68,14 @@ rocketchart.prototype.init = function(element, settings){
 	
 	
 	$(window).resize(function() {
-		rocketcharts.resize(rocketcharts.element.context.clientWidth, rocketcharts.element.context.clientHeight);
-		rocketcharts.draw();
+		self.resize(self.element.context.clientWidth, self.element.context.clientHeight);
+		self.draw();
 	});
 	
 	// Keeping this for future implementation of drag 'handles' via JQueryUI
 	panelsElement.bind( "resize", function(event, ui) {
-		rocketcharts.resize(ui.size.width, ui.size.height);
-		rocketcharts.draw();
+		self.resize(ui.size.width, ui.size.height);
+		self.draw();
 	});
 	panelsElement.bind("mousedown", function(event, ui) {
 		$(this).bind( "mousemove", function(event, ui) {
@@ -83,7 +83,7 @@ rocketchart.prototype.init = function(element, settings){
 			var relativeX = event.pageX - this.offsetLeft;
 		    var relativeY = event.pageY - this.offsetTop;
 			
-			rocketcharts.headsUpDisplay(relativeX, relativeY);
+			self.headsUpDisplay(relativeX, relativeY);
 			//rocketcharts.draw();
 		});
 		this.style.cursor = 'crosshair';
@@ -91,55 +91,43 @@ rocketchart.prototype.init = function(element, settings){
 		var relativeX = event.pageX - this.offsetLeft;
 	    var relativeY = event.pageY - this.offsetTop;
 		
-		rocketcharts.headsUpDisplay(relativeX, relativeY);
-		//rocketcharts.draw();
+		self.headsUpDisplay(relativeX, relativeY);
+		//self.draw();
 		return false; // Prevents browser from changing cursor to 'I-Beam', thinking we are trying to select text
 	});
 	panelsElement.bind("mouseup", function(event, ui) {
 		$(this).unbind( "mousemove" );
 		this.style.cursor = 'default';
-		rocketcharts.mouseDown = false;
-		rocketcharts.HUD = false;
-		//rocketcharts.draw();
-		rocketcharts.clearHUD();
+		self.mouseDown = false;
+		self.HUD = false;
+		//self.draw();
+		self.clearHUD();
 	});
 	
-	// If a settings object was passed with only the property 'resizable' set, just that
-	// parameter should be updated in the global object
-	if (settings != undefined) {
-		if (settings.defaultUpColor != undefined) {
-			this.settings.defaultUpColor = settings.defaultUpColor;
-		}
-		if (settings.defaultDownColor != undefined) {
-			this.settings.defaultDownColor = settings.defaultDownColor;
-		}
-		if (settings.backgroundColor != undefined) {
-			this.settings.backgroundColor = settings.backgroundColor;
-		}
-		if (settings.customUI != undefined) {
-			this.settings.customUI = settings.customUI;
-		}
+	//If settings were passed in, apply them to the instance settings.
+	if (!!settings) {
+		$.extend(self.settings, settings);
 	}
 	
-	this.settings.defaultUpColor = hexToRgb(this.settings.defaultUpColor);
-	this.settings.defaultDownColor = hexToRgb(this.settings.defaultDownColor);
-	this.settings.backgroundColor = hexToRgb(this.settings.backgroundColor);
+	self.settings.defaultUpColor = hexToRgb(self.settings.defaultUpColor);
+	self.settings.defaultDownColor = hexToRgb(self.settings.defaultDownColor);
+	self.settings.backgroundColor = hexToRgb(self.settings.backgroundColor);
 	
-	if (this.settings.resizable)
-		this.element.resizable();
+	if (self.settings.resizable)
+		self.element.resizable();
 		
-	if ((this.settings.customUI == false) || (this.settings.customUI == undefined)) {
+	if (self.settings.customUI !== true) {
 		// Add our windows for chart management:
-		GenerateDialogs(this.element, this.indicators);
+		GenerateDialogs(self, self.element, self.indicators);
 	}
 	
-	this.element.append("<div style=\"height: 15px; width: 100%; background-color: " + rgbToHex(this.settings.backgroundColor.r, this.settings.backgroundColor.g, this.settings.backgroundColor.b) + ";\">" +
-							"<canvas id=\"dateAxisCanvas\" width=\"" + this.width + "\" height=\"15\"></canvas>" +
+	self.element.append("<div style=\"height: 15px; width: 100%; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" +
+							"<canvas id=\"dateAxisCanvas\" width=\"" + self.width + "\" height=\"15\"></canvas>" +
 						"</div>");
 	
-	this.dateAxisCanvas = document.getElementById("dateAxisCanvas");
+	self.dateAxisCanvas = $("#dateAxisCanvas", self.element).get(0);
 	
-	this.element.append("<div id=\"zoomSlider\" style=\"height: 15px; width: 100%; background-color: " + rgbToHex(this.settings.backgroundColor.r, this.settings.backgroundColor.g, this.settings.backgroundColor.b) + ";\">" + "</div>");
+	self.element.append("<div id=\"zoomSlider\" style=\"height: 15px; width: 100%; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" + "</div>");
 	
 	// Experimental: Raster Text
 	/*
@@ -151,7 +139,7 @@ rocketchart.prototype.init = function(element, settings){
 	fontImage.onload = function(){
 		
 		bufferContext.drawImage(fontImage, 0, 0, 566, 7);
-		rocketcharts.fontPoints = new Array();
+		rocketcharts.fontPoints = [];
 		
 		var w = 566;
 		var fontPixelArray = bufferContext.getImageData(0, 0, w, 7);
@@ -163,7 +151,7 @@ rocketchart.prototype.init = function(element, settings){
 		var arrayPointer;
 		
 		for (var i=0; i < 95; i++) {
-			rocketcharts.fontPoints[i] = new Array();
+			rocketcharts.fontPoints[i] = [];
 		}
 		
 		for (var i=0; i < fontPixelData.length; i++) {
@@ -192,102 +180,6 @@ rocketchart.prototype.init = function(element, settings){
 
 	fontImage.src = "bitmapfont.png";
 	*/
-	
-	rocketcharts.fontPoints = [[{x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:2, y:0}, {x:4, y:0}, {x:2, y:1}, {x:4, y:1}], 
-			[{x:2, y:1}, {x:4, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:2, y:3}, {x:4, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:3, y:1}, {x:5, y:1}, {x:1, y:2}, {x:3, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:4, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:2, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:5, y:2}, {x:1, y:3}, {x:4, y:3}, {x:1, y:4}, {x:4, y:4}, {x:1, y:5}, {x:4, y:5}, {x:2, y:6}, {x:3, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:2, y:1}], 
-			[{x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:2, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:2, y:5}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:4, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}], 
-			[{x:3, y:0}, {x:1, y:1}, {x:3, y:1}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:3, y:6}], 
-			[{x:3, y:1}, {x:3, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:3, y:4}, {x:3, y:5}], 
-			[{x:3, y:5}, {x:2, y:6}], 
-			[{x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}], 
-			[{x:3, y:5}, {x:3, y:6}], 
-			[{x:5, y:0}, {x:4, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:2, y:5}, {x:1, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:3, y:0}, {x:2, y:1}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:5, y:2}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:1}, {x:5, y:2}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:4, y:0}, {x:1, y:1}, {x:4, y:1}, {x:1, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:4, y:4}, {x:4, y:5}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:2}, {x:2, y:3}, {x:2, y:5}, {x:2, y:6}], 
-			[{x:3, y:2}, {x:3, y:3}, {x:3, y:5}, {x:2, y:6}], 
-			[{x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:2, y:2}, {x:1, y:3}, {x:2, y:4}, {x:3, y:5}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:1}, {x:4, y:2}, {x:5, y:3}, {x:4, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:3, y:3}, {x:4, y:3}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:1, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:4, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:3, y:4}, {x:1, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}, {x:3, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:4, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:4, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:2, y:1}, {x:2, y:2}, {x:2, y:3}, {x:2, y:4}, {x:2, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:1}, {x:2, y:2}, {x:3, y:3}, {x:4, y:4}, {x:4, y:5}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:4, y:1}, {x:4, y:2}, {x:4, y:3}, {x:4, y:4}, {x:4, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:3, y:0}, {x:2, y:1}, {x:4, y:1}], 
-			[{x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:4, y:0}, {x:3, y:1}, {x:0, y:6}, {x:1, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:5, y:0}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:2, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:2, y:3}, {x:2, y:4}, {x:2, y:5}, {x:2, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:3, y:0}, {x:4, y:0}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:3, y:0}, {x:4, y:0}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:4, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:1, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:2, y:2}, {x:4, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:1, y:6}, {x:3, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:3, y:0}, {x:3, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}, {x:3, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:4, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:2, y:3}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:2, y:2}, {x:1, y:3}, {x:2, y:3}, {x:2, y:4}, {x:3, y:5}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:1}, {x:4, y:2}, {x:4, y:3}, {x:5, y:3}, {x:4, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}], 
-			[{x:2, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:4, y:4}], 
-			[]];
 };
 
 /**
@@ -298,8 +190,8 @@ rocketchart.prototype.init = function(element, settings){
  * @return	{void}
  * @method
  */
-rocketchart.prototype.resize = function(w, h){
-	
+Rocketchart.prototype.resize = function(w, h){
+	var self = this;
 	/*
 	 * The code relating to calcHeight was for dynamically resizing the height of the panels
 	 * when the end-user resized them via JQueryUI - putting this on hold for the moment
@@ -307,11 +199,11 @@ rocketchart.prototype.resize = function(w, h){
 	
 	// var calcHeight = 0;
 	
-	this.width = w;
-	this.dateAxisCanvas.setAttribute("width", w);
-	var simpleHeight = Math.floor(h / this.panels.length) - 1;
+	self.width = w;
+	self.dateAxisCanvas.setAttribute("width", w);
+	var simpleHeight = Math.floor(h / self.panels.length) - 1;
 	
-	for (var i=0; i < this.panels.length; i++) {
+	for (var i=0; i < self.panels.length; i++) {
 		
 		/*
 		if (this.panels[i]._userHeight <= 1){
@@ -322,13 +214,13 @@ rocketchart.prototype.resize = function(w, h){
 		*/
 		
 		// update the width and height of the canvas
-		this.panels[i]._canvas.setAttribute("width", w - 1);
-		this.panels[i]._canvas.setAttribute("height", simpleHeight);
-		this.panels[i]._canvas.style.top = simpleHeight * i;
+		self.panels[i]._canvas.setAttribute("width", w - 1);
+		self.panels[i]._canvas.setAttribute("height", simpleHeight);
+		self.panels[i]._canvas.style.top = simpleHeight * i;
 		
-		this.panelOverlays[i].setAttribute("width", w - 1);
-		this.panelOverlays[i].setAttribute("height", simpleHeight);
-		this.panelOverlays[i].style.top = simpleHeight * i;
+		self.panelOverlays[i].setAttribute("width", w - 1);
+		self.panelOverlays[i].setAttribute("height", simpleHeight);
+		self.panelOverlays[i].style.top = simpleHeight * i;
 		
 	}
 }
@@ -341,12 +233,13 @@ rocketchart.prototype.resize = function(w, h){
  * @return	{void}
  * @method
  */
-rocketchart.prototype.headsUpDisplay = function(x, y){
-	var dateAxisWidth = this.width - this.priceAxisWidth;
+Rocketchart.prototype.headsUpDisplay = function(x, y){
+	var self = this;
+	var dateAxisWidth = self.width - self.priceAxisWidth;
 	
-	var displayedPoints = rocketcharts.view.endingPoint - rocketcharts.view.startingPoint; 
-	var horizontalPixelsPerPoint = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
+	var displayedPoints = self.view.endingPoint - self.view.startingPoint;
+	var horizontalPixelsPerPoint = self.view.horizontalPixelsPerPoint;
+	var halfhorizSpacing = self.view.halfHorizontalPixelsPerPoint;
 	
 	var point = -1;
 	
@@ -358,7 +251,7 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 	}
 	
 	var pointX = (point * horizontalPixelsPerPoint) + halfhorizSpacing;
-	point = point + rocketcharts.view.startingPoint;
+	point = point + self.view.startingPoint;
 	
 	var height = 0;
 	var width = 0;
@@ -368,42 +261,42 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 	
 	var legendLines = [];
 	
-	for (var i=0; i < this.panelOverlays.length; i++) {
+	for (var i=0; i < self.panelOverlays.length; i++) {
 		
 		// grab the datacontext of the canvas
-		var context = this.panelOverlays[i].getContext("2d");
+		var context = self.panelOverlays[i].getContext("2d");
 		
 		// read the height of the canvas
-		height = parseInt(this.panelOverlays[i].getAttribute("height"));
-		width = parseInt(this.panelOverlays[i].getAttribute("width"));
+		height = parseInt(self.panelOverlays[i].getAttribute("height"));
+		width = parseInt(self.panelOverlays[i].getAttribute("width"));
 		
 		// create a new pixel array
 		var imageData = context.createImageData(width, height);
 		
 		line(imageData, pointX, 0, pointX, height, 255, 255, 255, 255, 1);
 		
-		bottom = this.panelOverlays[i].offsetTop + this.panelOverlays[i].height;
+		bottom = self.panelOverlays[i].offsetTop + self.panelOverlays[i].height;
 		
-		if ((y > this.panelOverlays[i].offsetTop) && (y < bottom) ) {
-			calcY = y - this.panelOverlays[i].offsetTop;
+		if ((y > self.panelOverlays[i].offsetTop) && (y < bottom) ) {
+			calcY = y - self.panelOverlays[i].offsetTop;
 			line(imageData, 0, calcY, width, calcY, 255, 255, 255, 255, 1);
 		}
 		
 		// HUD:
-		for (var s=0; s < this.panels[i]._series.length; s++) {
-			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [OPEN]: " + formatRate(this.panels[i]._series[s].data[point]["open"]);
-			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [HIGH]: " + formatRate(this.panels[i]._series[s].data[point]["high"]);
-			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [LOW]: " + formatRate(this.panels[i]._series[s].data[point]["low"]);
-			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [CLOSE]: " + formatRate(this.panels[i]._series[s].data[point]["close"]);
-			legendLines[legendLines.length] = this.panels[i]._series[s].title + " [DATE]: " + this.panels[i]._series[s].data[point]["date"];
+		for (var s=0; s < self.panels[i]._series.length; s++) {
+			legendLines[legendLines.length] = self.panels[i]._series[s].title + " [OPEN]: " + formatRate(self.panels[i]._series[s].data[point]["open"]);
+			legendLines[legendLines.length] = self.panels[i]._series[s].title + " [HIGH]: " + formatRate(self.panels[i]._series[s].data[point]["high"]);
+			legendLines[legendLines.length] = self.panels[i]._series[s].title + " [LOW]: " + formatRate(self.panels[i]._series[s].data[point]["low"]);
+			legendLines[legendLines.length] = self.panels[i]._series[s].title + " [CLOSE]: " + formatRate(self.panels[i]._series[s].data[point]["close"]);
+			legendLines[legendLines.length] = self.panels[i]._series[s].title + " [DATE]: " + self.panels[i]._series[s].data[point]["date"];
 		}
 
-		for (var s=0; s < this.panels[i]._indicators.length; s++) {
+		for (var s=0; s < self.panels[i]._indicators.length; s++) {
 			
-			for (var j=0; j < this.panels[i]._indicators[s]._indicator._series.length; j++) {
-				legendLines[legendLines.length] = this.panels[i]._indicators[s]._indicator._series[j].title + ": " + formatRate(this.panels[i]._indicators[s]._indicator._data[j][point]);
+			for (var j=0; j < self.panels[i]._indicators[s]._indicator._series.length; j++) {
+				legendLines[legendLines.length] = self.panels[i]._indicators[s]._indicator._series[j].title + ": " + formatRate(self.panels[i]._indicators[s]._indicator._data[j][point]);
 			}
-		};
+		}
 		
 		boxBlend(imageData, 10, 10, 210, (legendLines.length * 15) + 10, 25, 25, 25, 60);// 0xFF);
 		for (var s=0; s < legendLines.length; s++) {
@@ -415,11 +308,11 @@ rocketchart.prototype.headsUpDisplay = function(x, y){
 		context.putImageData(imageData, 0, 0);
 		
 		legendLines = [];
-	};
+	}
 	
-}
+};
 
-rocketchart.prototype.clearHUD = function(){
+Rocketchart.prototype.clearHUD = function(){
 	
 	for (var i=0; i < this.panelOverlays.length; i++) {
 
@@ -432,7 +325,7 @@ rocketchart.prototype.clearHUD = function(){
 		
 	}
 	
-}
+};
 
 /**
  * Adds a canvas to our root element and tracks it in our panels array
@@ -440,7 +333,7 @@ rocketchart.prototype.clearHUD = function(){
  * @return	{int}		The ID of the panel that was added
  * @method
  */
-rocketchart.prototype.addPanel = function(){
+Rocketchart.prototype.addPanel = function(){
 	
 	var calcHeight = 0;
 	var calcY = 0;
@@ -453,7 +346,7 @@ rocketchart.prototype.addPanel = function(){
 		actualHeight = this.settings.minimumPanelHeight;
 	}
 	
-	var panelsElement = $("#panels");
+	var panelsElement = $("#panels", this.element);
 	
 	for (var i=0; i < this.panels.length; i++) {
 		
@@ -477,13 +370,13 @@ rocketchart.prototype.addPanel = function(){
 	
 	// this.element.append
 	panelsElement.append('<canvas style="padding: 0px; margin: 0px; z-index: 0; position: absolute; left: 0px; top: ' + calcY + 'px;" id="panel' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
-	this.panels[panelID] = new rocketpanel(document.getElementById("panel" + panelID), actualHeight);
+	this.panels[panelID] = new Rocketpanel($('#panel' + panelID, this.element).get(0), actualHeight, this);
 	
 	panelsElement.append('<canvas style="padding: 0px; margin: 0px; z-index: 1; position: absolute; left: 0px; top: ' + calcY + 'px;" id="panelOverlay' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
-	this.panelOverlays[panelID] = document.getElementById("panelOverlay" + panelID);
+	this.panelOverlays[panelID] = $("#panelOverlay" + panelID, this.element).get(0);
 	
 	return panelID;
-}
+};
 
 /**
  * Adds a new primary series to the chart
@@ -496,33 +389,27 @@ rocketchart.prototype.addPanel = function(){
  * @return	{void}
  * @method
  */
-rocketchart.prototype.addSeries = function(title, data, type, style, panel){
-
+Rocketchart.prototype.addSeries = function(title, data, type, style, panel){
+	var self = this;
 	var panelID = -1;
 	var panelHeight = -1;
 
-	if (panel == undefined){
-		panelID = this.addPanel();
-	} else {
-		panelID = panel;
-	}
+	panelID = panel || self.addPanel();
 	
-	if (data == undefined){
+	if (data === undefined){
 		data = GeneratePriceHistory();
 	} else {
 		// TODO: Verify the integrity of the data before blindly accepting it. 
 	}
-	
-	if (type == undefined) {
-		type = 0; // Default to candlesticks
-	}
-	
+
+	type = type || 'candlesticks';// Default to candlesticks
+
 	// Keep track of all series data in a root array for quick lookups
-	this.data[this.data.length] = {title: title, data: data};
-	this.panels[panelID].addSeries(new rocketseries(this.data[this.data.length - 1].data, type, title, style));
+	self.data.push({title: title, data: data});
+	self.panels[panelID].addSeries(new Rocketseries(self.data[self.data.length - 1].data, type, title, style, self));
 	
-	rocketcharts.view.startingPoint = Math.round(data.length / 2);
-	rocketcharts.view.endingPoint = data.length;
+	self.view.startingPoint = Math.round(data.length / 2);
+	self.view.endingPoint = data.length;
 	
 	/* OLD JQUERY UI SLIDER
 	$("#zoomSlider").slider({
@@ -538,7 +425,7 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 	});
 	*/
 	
-	$("#zoomSlider").rangeSlider({
+	$("#zoomSlider", self.element).rangeSlider({
 		  defaultValues:{min:Math.round(data.length / 2), max:data.length - 1},
 		  bounds:{min:0, max:data.length - 1},
 		  wheelMode: null,
@@ -546,8 +433,8 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 		  arrows: true,
 		  valueLabels: "change",
 		  formatter: function(value){
-			  if (rocketcharts.data.length > 0) {
-				  return rocketcharts.data[0].data[Math.round(value)].date;
+			  if (self.data.length > 0) {
+				  return self.data[0].data[Math.round(value)].date;
 			  } else {
 				  return Math.round(value);
 			  }
@@ -557,13 +444,13 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 		  delayOut: 200
 		});
 	
-	$("#zoomSlider").bind("valuesChanging", function(event, ui){
-		rocketcharts.view.startingPoint = Math.round(ui.values["min"]);
-		rocketcharts.view.endingPoint = Math.round(ui.values["max"]) + 1;
-		rocketcharts.draw();
+	$("#zoomSlider", self.element).bind("valuesChanging", function(event, ui){
+		self.view.startingPoint = Math.round(ui.values["min"]);
+		self.view.endingPoint = Math.round(ui.values["max"]) + 1;
+		self.draw();
 	});
 	
-	this.draw();
+	self.draw();
 };
 
 /**
@@ -576,7 +463,7 @@ rocketchart.prototype.addSeries = function(title, data, type, style, panel){
  * @return	{int}		The ID in the indicatorIndex that points to this indicator
  * @method
  */
-rocketchart.prototype.addIndicator = function(id, params, series, panel){
+Rocketchart.prototype.addIndicator = function(id, params, series, panel){
 
 	var panelID = -1;
 	var indicatorID = -1;
@@ -591,18 +478,18 @@ rocketchart.prototype.addIndicator = function(id, params, series, panel){
 		series = 0;
 	}
 	
-	indicatorID = this.panels[panelID].addIndicator(new rocketindicator(id, this.data[series].data, params));
+	indicatorID = this.panels[panelID].addIndicator(new Rocketindicator(this, id, this.data[series].data, params));
 	this.indicatorIndex[this.indicatorIndex.length] = {panel: panelID, indicator: indicatorID};
 	this.draw();
 	
 	return (this.indicatorIndex.length - 1);
 };
 
-rocketchart.prototype.removeIndicator = function(id) {
+Rocketchart.prototype.removeIndicator = function(id) {
 	this.panels[this.indicatorIndex[id].panel]._indicators.splice(this.indicatorIndex[id].indicator, 1);
 	this.indicatorIndex.splice(id, 1);
 	this.draw();
-}
+};
 
 
 /**
@@ -612,39 +499,39 @@ rocketchart.prototype.removeIndicator = function(id) {
  * @return	{void}
  * @method
  */
-rocketchart.prototype.draw = function(){
-	
+Rocketchart.prototype.draw = function(){
+	var self = this;
 	var height = 0;
 	
 	// For now displayedPoints = all ticks, in the future whatever zoom or view we have set
-	var displayedPoints = rocketcharts.view.endingPoint - rocketcharts.view.startingPoint; //this.data[0].data.length; 
-	var dateAxisWidth = this.width - this.priceAxisWidth;
-	rocketcharts.view.horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
-	rocketcharts.view.halfHorizontalPixelsPerPoint = Math.round(rocketcharts.view.horizontalPixelsPerPoint / 2.0) - 1;
+	var displayedPoints = self.view.endingPoint - self.view.startingPoint; //this.data[0].data.length;
+	var dateAxisWidth = self.width - self.priceAxisWidth;
+	self.view.horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
+	self.view.halfHorizontalPixelsPerPoint = Math.round(self.view.horizontalPixelsPerPoint / 2.0) - 1;
 	
 	// Draw panels:
-	for (var i=0; i < this.panels.length; i++) {
+	for (var i=0; i < self.panels.length; i++) {
 		
 		// grab the datacontext of the canvas
-		var context = this.panels[i]._canvas.getContext("2d");
+		var context = self.panels[i]._canvas.getContext("2d");
 		
 		// read the height of the canvas
-		height = parseInt(this.panels[i]._canvas.getAttribute("height"));
+		height = parseInt(self.panels[i]._canvas.getAttribute("height"));
 		
-		console.log("draw called, width: " + this.width + " height: " + height);
+		console.log("draw called, width: " + self.width + " height: " + height);
 		
 		// create a new pixel array
-		var imageData = context.createImageData(this.width, height);
+		var imageData = context.createImageData(self.width, height);
 		
-		this.panels[i].draw(imageData, this.width - this.priceAxisWidth);
+		self.panels[i].draw(imageData, self.width - self.priceAxisWidth);
 		
 		// copy the image data back onto the canvas
 		context.putImageData(imageData, 0, 0);
-	};
+	}
 	
 	// Draw date axis:
-	var context = this.dateAxisCanvas.getContext("2d");
-	var imageData = context.createImageData(this.width, 15);
+	var context = self.dateAxisCanvas.getContext("2d");
+	var imageData = context.createImageData(self.width, 15);
 	
 	
 	
@@ -653,10 +540,10 @@ rocketchart.prototype.draw = function(){
 	
 	// Take the last date string, calculate it's width in pixels
 	// TODO: Perhaps calculate the average length to avoid one-off long or short strings?
-	var averageDateSpace = (this.data[0].data[displayedPoints - 1].date.length * 6) + 20;
+	var averageDateSpace = (self.data[0].data[displayedPoints - 1].date.length * 6) + 20;
 	
 	var minorStep = 4;
-	var majorStep = Math.ceil(averageDateSpace / (minorStep * rocketcharts.view.horizontalPixelsPerPoint));
+	var majorStep = Math.ceil(averageDateSpace / (minorStep * self.view.horizontalPixelsPerPoint));
 	//var majorStep = Math.ceil(150 / (minorStep * horizontalPixelsPerPoint));
 	
 	var k = 0;
@@ -665,7 +552,7 @@ rocketchart.prototype.draw = function(){
 	for (var i=1; i < displayedPoints; i++) {
 		
 		if (i % minorStep == 0) {
-			k = (i * rocketcharts.view.horizontalPixelsPerPoint) + rocketcharts.view.halfHorizontalPixelsPerPoint;
+			k = (i * self.view.horizontalPixelsPerPoint) + self.view.halfHorizontalPixelsPerPoint;
 			line(imageData, k, 0, k, 1, 100, 100, 100, 0xFF);
 			tickCount++;
 			
@@ -673,19 +560,61 @@ rocketchart.prototype.draw = function(){
 				//k = i * horizontalPixelsPerPoint;
 				line(imageData, k, 0, k, 3, 255,255,255, 0xFF);
 				//rasterText(imageData, this.data[0].data[i].date, k - 60, 6);
-				rasterText(imageData, this.data[0].data[rocketcharts.view.startingPoint + i].date, k - (averageDateSpace / 2) + 10, 6);
+				rasterText(imageData, self.data[0].data[self.view.startingPoint + i].date, k - (averageDateSpace / 2) + 10, 6);
 			}
 		}
 		
 		
 		
-	};
+	}
 	
 	context.putImageData(imageData, 0, 0);
 
 };
 
-var rocketcharts = new rocketchart();
+/**
+ * Utility function exposed to indicators allowing quick calculation of an SMA on any dataset
+ * @alias				Rocketindicatorcalculations.calculateSMA(periods, data);
+ * @param	{int}		periods
+ * @param	{Array}		data	The array of data to calculate SMA from...
+ * @return	{Array}
+ * @method
+ */
+Rocketchart.prototype.calculateSMA = function(periods, data) {
+	var count = data.length;
+	var returnArray = [];
+	var total = 0;
+
+	for (var j = 0; j<count; j++)
+	{
+		returnArray[j] = null;
+	}
+
+	var startIndex = 0;
+
+	for (var k = 0; k < count; k++)
+	{
+		if (data[k] != null)
+		{
+			startIndex = k + periods;
+			break;
+		}
+	}
+
+	for (var i = startIndex; i < count; i++)
+	{
+		for (var j = 0; j < periods; j++)
+		{
+			total += data[i - j];
+		}
+
+		returnArray[i] = total / periods;
+		total = 0;
+	}
+
+	return returnArray;
+};
+
 
 /**
  * Base class for our series
@@ -697,36 +626,17 @@ var rocketcharts = new rocketchart();
  * @return	{bool}
  * @method 
  */
-function rocketseries(data, type, title, style){
+function Rocketseries(data, type, title, style, rocketchart){
 	this.data = data;
 	this.type = type;
 	this.title = title;
-	this.style = style;
-	
-	if (this.style == undefined) {
-		this.style = new Object();
-	}
-	
-	if (this.style.UpColor == undefined) {
-		this.style.UpColor = rocketcharts.settings.defaultUpColor;
-	}
-	
-	if (this.style.DownColor == undefined) {
-		this.style.DownColor = rocketcharts.settings.defaultDownColor;
-	}
+	this.style = style || {};
+	this.rocketchart = rocketchart;
+
+	this.style.UpColor =  this.style.UpColor || rocketchart.settings.defaultUpColor;
+	this.style.DownColor =  this.style.DownColor || rocketchart.settings.defaultDownColor;
 	
 	return true;
-}
-
-/**
- * Series type enumeration
- */
-rocketseries.seriesType = {
-	LINE: "line",
-	DOT: "dot",
-	HISTOGRAM: "histogram",
-	AREA: "area",
-	DISJOINTED: "disjointed"
 }
 
 /**
@@ -740,15 +650,11 @@ rocketseries.seriesType = {
  * @return	{bool}
  * @method
  */
-rocketseries.prototype.draw = function(imageData, verticalPixelPerPoint, gridMin, w, h){
-	switch(this.type){
-		case 0:
-			this.drawCandlesticks(imageData, verticalPixelPerPoint, gridMin, w, h);
-			break;
-	}
-}
+Rocketseries.prototype.draw = function(imageData, verticalPixelPerPoint, gridMin, w, h){
+	this[this.type].apply(this, arguments);//type === function name.  apply passes all the same arguments.
+};
 
-rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPoint, gridMin, w, h){
+Rocketseries.prototype.candlesticks = function(imageData, verticalPixelPerPoint, gridMin, w, h){
 	
 	var yCloseOld = 0;
 	
@@ -763,8 +669,8 @@ rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPo
 	var yvalueClose;
 	
 	var startTick = 0;//_sizing.StartingTick;
-	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
+	var horizSpacing = this.rocketchart.view.horizontalPixelsPerPoint;
+	var halfhorizSpacing = this.rocketchart.view.halfHorizontalPixelsPerPoint;
 	var lineAreaStart = h;
 	var X = halfhorizSpacing;
 	
@@ -778,7 +684,7 @@ rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPo
 	
 	var i = 0;
 	
-	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++) //dataCount
+	for (i = this.rocketchart.view.startingPoint; i < this.rocketchart.view.endingPoint; i++) //dataCount
 	{			
 		if ( this.data[i]["empty"] != true ) // Null means a market gap
 		{
@@ -806,9 +712,9 @@ rocketseries.prototype.drawCandlesticks = function(imageData, verticalPixelPerPo
 		
 		X += horizSpacing;
 	}
-}
+};
 
-function rocketpanel(canvas, height){
+function Rocketpanel(canvas, height, rocketchart){
 	this._canvas = canvas;
 	this._gridMax = -100000;
 	this._gridMin = 100000;
@@ -816,16 +722,12 @@ function rocketpanel(canvas, height){
 	this._indicators = [];
 	this._height = 0;
 	this._verticalPixelsPerPoint = 0;
-	this._userHeight = height;
-	
-	if (this._userHeight == undefined){
-		this._userHeight = .50; // Default to 50% - the formula is: if userHeight <= 1, it's percentage, else it's pixels
-	}
-	
+	this._userHeight = height || .50;// Default to 50% - the formula is: if userHeight <= 1, it's percentage, else it's pixels
+	this.rocketchart = rocketchart;
 	return true;
-};
+}
 
-rocketpanel.prototype.draw = function(imageData, w){
+Rocketpanel.prototype.draw = function(imageData, w){
 
 	this.calculate();
 	
@@ -845,25 +747,24 @@ rocketpanel.prototype.draw = function(imageData, w){
 		}
 		
 		oldY = yValue;
-	};
+	}
 	
 	var legendLines = [];
-	var legendPoint = rocketcharts.data[0].data.length - 1;
-	
+
 	// Draw series
 	for (var i=0; i < this._series.length; i++) {
 		this._series[i].draw(imageData, this._verticalPixelsPerPoint, this._gridMin, w, this._height);
-		legendLines[legendLines.length] = this._series[i].title;
-	};
+		legendLines.push(this._series[i].title);
+	}
 	
 	// Draw indicators
 	for (var i=0; i < this._indicators.length; i++) {
 		this._indicators[i].draw(imageData, this._verticalPixelsPerPoint, this._gridMin, w, this._height);
 		
 		for (var j=0; j < this._indicators[i]._indicator._series.length; j++) {
-			legendLines[legendLines.length] = this._indicators[i]._indicator._series[j].title;	
+			legendLines.push(this._indicators[i]._indicator._series[j].title);
 		}
-	};
+	}
 	
 	boxBlend(imageData, 10, 10, 210, (legendLines.length * 15) + 10, 25, 25, 25, 60);// 0xFF);
 	for (var i=0; i < legendLines.length; i++) {
@@ -872,16 +773,16 @@ rocketpanel.prototype.draw = function(imageData, w){
 	
 };
 
-rocketpanel.prototype.addSeries = function(series){
-	this._series[this._series.length] = series;
+Rocketpanel.prototype.addSeries = function(series){
+	this._series.push(series);
 };
 
-rocketpanel.prototype.addIndicator = function(indicator){
-	this._indicators[this._indicators.length] = indicator;
+Rocketpanel.prototype.addIndicator = function(indicator){
+	this._indicators.push(indicator);
 	return (this._indicators.length - 1);
 };
 
-rocketpanel.prototype.calculate = function(){
+Rocketpanel.prototype.calculate = function(){
 	this._height = $(this._canvas).attr("height");
 	this._gridMax = -100000;
 	this._gridMin = 100000;
@@ -893,7 +794,7 @@ rocketpanel.prototype.calculate = function(){
 		//var len = this._series[i].data.length; //_sizing.StartingTick + _sizing.VisibleTicks;
 		//var startValue = 0;//_sizing.StartingTick;
 		
-		for (var j = rocketcharts.view.startingPoint; j < rocketcharts.view.endingPoint; j++)
+		for (var j = this.rocketchart.view.startingPoint; j < this.rocketchart.view.endingPoint; j++)
 		{
 			
 			if (this._series[i].data[j]["high"] > this._gridMax)
@@ -911,7 +812,7 @@ rocketpanel.prototype.calculate = function(){
 			//var len = this._indicators[i]._indicator._data[j].length; //_sizing.StartingTick + _sizing.VisibleTicks;
 			//var startValue = 0;//_sizing.StartingTick;
 			
-			for (var k = rocketcharts.view.startingPoint; k < rocketcharts.view.endingPoint; k++){
+			for (var k = this.rocketchart.view.startingPoint; k < this.rocketchart.view.endingPoint; k++){
 				value = this._indicators[i]._indicator._data[j][k];
 				
 				if (value != null) {
@@ -936,25 +837,16 @@ rocketpanel.prototype.calculate = function(){
 };
 
 // id = lookup in public indicator array
-function rocketindicator(id, data, params, series){
+function Rocketindicator(rocketchart, id, data, params, series){
 	// lookup the right function (object) to create based on the id and pass it the data
-	var calc = new rocketindicatorcalculations();
+	var calc = new Rocketindicatorcalculations();
+	this.rocketchart = rocketchart;
 	this._indicator = new calc[id](data, params, series);
 }
 
-rocketindicator.prototype.draw = function(imageData, verticalPixelPerPoint, gridMin, w, h){
+Rocketindicator.prototype.draw = function(imageData, verticalPixelPerPoint, gridMin, w, h){
 	for(var i=0; i<this._indicator._series.length; i++){
-		switch(this._indicator._series[i].type){
-			case rocketseries.seriesType.LINE:
-				this.drawLine(imageData, verticalPixelPerPoint, gridMin, w, h, i);
-				break;
-			case rocketseries.seriesType.HISTOGRAM:
-				this.drawHistogram(imageData, verticalPixelPerPoint, gridMin, w, h, i);
-				break;
-			case rocketseries.seriesType.DOT:
-				this.drawDot(imageData, verticalPixelPerPoint, gridMin, w, h, i);
-				break;
-		}
+		this[this._indicator._series[i].type](imageData, verticalPixelPerPoint, gridMin, w, h, i);
 	}
 	
 	var yValue = 0;
@@ -965,17 +857,17 @@ rocketindicator.prototype.draw = function(imageData, verticalPixelPerPoint, grid
 			line(imageData, 0, yValue, w, yValue, 255, 255, 255, 255, 1);
 		}
 	}
-}
+};
 
-rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, gridMin, w, h, s){
+Rocketindicator.prototype.line = function(imageData, verticalPixelPerPoint, gridMin, w, h, s){
 	var indicatorData = this._indicator._data;
 	var seriesLength = 0;
 	var lastValue = 0;
 	var lastValueOld = 0;
 	var i = 0;
 	
-	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
+	var horizSpacing = this.rocketchart.view.horizontalPixelsPerPoint;
+	var halfhorizSpacing = this.rocketchart.view.halfHorizontalPixelsPerPoint;
 	var barHeight = 0;
 	var X = halfhorizSpacing;
 	var smoothing = false; //Preferences.EnableSmoothing;
@@ -994,7 +886,7 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 	var n:uint=(ac<<24)+(r1<<16)+(g1<<8)+b1;
 	*/
 	
-	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++)
+	for (i = this.rocketchart.view.startingPoint; i < this.rocketchart.view.endingPoint; i++)
 	{
 		if (indicatorData[s][i] != null)
 		{
@@ -1018,24 +910,24 @@ rocketindicator.prototype.drawLine = function(imageData, verticalPixelPerPoint, 
 		
 		X += horizSpacing;
 	}
-}
+};
 
-rocketindicator.prototype.drawDot = function(imageData, verticalPixelPerPoint, gridMin, w, h, s){
+Rocketindicator.prototype.dot = function(imageData, verticalPixelPerPoint, gridMin, w, h, s){
 	var indicatorData = this._indicator._data;
 	var seriesLength = 0;
 	var lastValue = 0;
 	var lastValueOld = 0;
 	var i = 0;
 	
-	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
+	var horizSpacing = this.rocketchart.view.horizontalPixelsPerPoint;
+	var halfhorizSpacing = this.rocketchart.view.halfHorizontalPixelsPerPoint;
 	
 	var X = halfhorizSpacing;
 	
 	seriesLength = indicatorData[s].length;
 	var seriesColor = hexToRgb(intToHex(this._indicator._series[s].color));
 	
-	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++)
+	for (i = this.rocketchart.view.startingPoint; i < this.rocketchart.view.endingPoint; i++)
 	{
 		if (indicatorData[s][i] != null)
 		{
@@ -1045,17 +937,17 @@ rocketindicator.prototype.drawDot = function(imageData, verticalPixelPerPoint, g
 		
 		X += horizSpacing;
 	}
-}
+};
 
-rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPoint, gridMin, w, h, s){
+Rocketindicator.prototype.histogram = function(imageData, verticalPixelPerPoint, gridMin, w, h, s){
 	var indicatorData = this._indicator._data;
 	var seriesCount = indicatorData.length;
 	var seriesLength = 0;
 	var lastValue = 0;
 	var i = 0;
 	var x = 0;
-	var horizSpacing = rocketcharts.view.horizontalPixelsPerPoint;
-	var halfhorizSpacing = rocketcharts.view.halfHorizontalPixelsPerPoint;
+	var horizSpacing = this.rocketchart.view.horizontalPixelsPerPoint;
+	var halfhorizSpacing = this.rocketchart.view.halfHorizontalPixelsPerPoint;
 	var barHeight = 0;
 	var counter = halfhorizSpacing;
 	
@@ -1074,7 +966,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 	var n:uint=(ac<<24)+(r1<<16)+(g1<<8)+b1;
 	*/
 	
-	for (i = rocketcharts.view.startingPoint; i < rocketcharts.view.endingPoint; i++)
+	for (i = this.rocketchart.view.startingPoint; i < this.rocketchart.view.endingPoint; i++)
 	{
 		if (indicatorData[s][i] != null)
 		{
@@ -1121,7 +1013,7 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
 		
 		counter += horizSpacing;
 	}
-}
+};
 
 /**
  * Create a new framework of utility functions.
@@ -1130,53 +1022,11 @@ rocketindicator.prototype.drawHistogram = function(imageData, verticalPixelPerPo
  * @return	{Boolean}		Returns true.
  * @constructor
  */
-function rocketindicatorcalculations() {
+function Rocketindicatorcalculations() {
 	
 	return true;
 }
 
-/**
- * Utility function exposed to indicators allowing quick calculation of an SMA on any dataset
- * @alias				rocketindicatorcalculations.calculateSMA(periods, data);
- * @param	{int}		periods	
- * @param	{Array}		data	The array of data to calculate SMA from...
- * @return	{Array}
- * @method
- */
-rocketchart.prototype.calculateSMA = function(periods, data) {
-	var count = data.length;
-	var returnArray = [];
-	var total = 0;
-	
-	for (var j = 0; j<count; j++)
-	{
-		returnArray[j] = null;
-	}
-	
-	var startIndex = 0;
-	
-	for (var k = 0; k < count; k++)
-	{
-		if (data[k] != null)
-		{
-			startIndex = k + periods;
-			break;
-		}
-	}
-		
-	for (var i = startIndex; i < count; i++)
-	{
-		for (var j = 0; j < periods; j++)
-		{
-			total += data[i - j];
-		}
-		
-		returnArray[i] = total / periods;
-		total = 0;
-	}
-	
-	return returnArray;
-}
 
 /**
  * Accept an array of OHLC data and an array of parameters, then performs the simple moving average calculation.
@@ -1186,22 +1036,14 @@ rocketchart.prototype.calculateSMA = function(periods, data) {
  * @return	{Object}			Returns the indicator data
  * @method
  */
-rocketindicatorcalculations.prototype.simplemovingaverage = function (data, params, series) {
+Rocketindicatorcalculations.prototype.simplemovingaverage = function (data, params, series) {
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
 	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: rocketseries.seriesType.LINE, title: "SMA", color: 0xFF0000};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Periods', type: 'int', value: 9};
-	}
+	this._series = this._series || [{type: 'line', title: "SMA", color: 0xFF0000}];
+	this._params = this._params || [{name: 'Periods', type: 'int', value: 9}];
 	
 	this.calculate = function(){
 		if (this._sourceData != null) {
@@ -1231,28 +1073,20 @@ rocketindicatorcalculations.prototype.simplemovingaverage = function (data, para
 				total = 0;
 			}
 		}
-	}
+	};
 	
 	this.calculate();
 };
 
-rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, params, series) {
+Rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, params, series) {
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: rocketseries.seriesType.LINE, title: "WMA", color: 0xFF0000};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Periods', type: 'int', value: 9, min: 2, max: 200, step: 1};
-	}
-	
+
+	this._series = this._series || [{type: 'line', title: "WMA", color: 0xFF0000}];
+	this._params = this._params || [{name: 'Periods', type: 'int', value: 9, min: 2, max: 200, step: 1}];
+
 	this.calculate = function(){
 		if (this._sourceData != null) {
 			var total = 0;
@@ -1281,32 +1115,30 @@ rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, pa
 				total = 0;
 			}
 		}
-	}
+	};
 	
 	this.calculate();
 };
 
-rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = function (data, params, series) {
+Rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = function (data, params, series) {
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: rocketseries.seriesType.HISTOGRAM, title: "MACD Histogram", color: 0xFF0000};
-		this._series[1] = {type: rocketseries.seriesType.LINE, title: "MACD Trigger", color: 0xFFFFFF};
-		this._series[2] = {type: rocketseries.seriesType.LINE, title: "MACD", color: 0x666666};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Slow EMA Periods', type: 'int', value: 9};
-		this._params[1] = {name: 'Fast EMA Periods', type: 'int', value: 12};
-		this._params[2] = {name: 'Trigger EMA Periods', type: 'int', value: 9};
-	}
-	
+
+
+	this._series = this._series || [
+		{type: 'histogram', title: "MACD Histogram", color: 0xFF0000},
+		{type: 'line', title: "MACD Trigger", color: 0xFFFFFF},
+		{type: 'line', title: "MACD", color: 0x666666}
+	];
+
+	this._params = this._params || [
+		{name: 'Slow EMA Periods', type: 'int', value: 9},
+		{name: 'Fast EMA Periods', type: 'int', value: 12},
+		{name: 'Trigger EMA Periods', type: 'int', value: 9}
+	];
+
 	this.calculateEMA = function (data, periods) {
 		var returnArray = [];
 		var total = 0;
@@ -1339,7 +1171,7 @@ rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 		}
 		
 		return returnArray;
-	}
+	};
 	
 	this.calculate = function(){
 		if (this._sourceData != null) {
@@ -1350,7 +1182,7 @@ rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 			
 			for (i = 0; i < count; i++){
 				closeArray[i] = this._sourceData[i]["close"];
-			};
+			}
 			
 			/** STAGE 1: Calculate MACD Line */
 			
@@ -1397,31 +1229,28 @@ rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 			this._data[2] = MACDValues;
 			
 		}
-	}
+	};
 	
 	this.calculate();
 };
 
-rocketindicatorcalculations.prototype.bollingerbands = function (data, params, series) {
+Rocketindicatorcalculations.prototype.bollingerbands = function (data, params, series) {
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: rocketseries.seriesType.LINE, title: "BB Upper", color: 0xFFFFFF};
-		this._series[1] = {type: rocketseries.seriesType.LINE, title: "BB Middle", color: 0xFFFFFF};
-		this._series[2] = {type: rocketseries.seriesType.LINE, title: "BB Lower", color: 0xFFFFFF};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Periods', type: 'int', value: 9};
-		this._params[1] = {name: 'Standard Deviations', type: 'int', value: 2};
-	}
-	
+
+	this._series = this._series || [
+		{type: 'line', title: "BB Upper", color: 0xFFFFFF},
+		{type: 'line', title: "BB Middle", color: 0xFFFFFF},
+		{type: 'line', title: "BB Lower", color: 0xFFFFFF}
+	];
+
+	this._params = this._params || [
+		{name: 'Periods', type: 'int', value: 9},
+		{name: 'Standard Deviations', type: 'int', value: 2}
+	];
+
 	this.calculate = function(){
 		if (this._sourceData != null) {
 			var total = 0;
@@ -1471,35 +1300,33 @@ rocketindicatorcalculations.prototype.bollingerbands = function (data, params, s
 			this._data[1] = smaValues;
 			this._data[2] = lower;
 		}
-	}
+	};
 	
 	this.calculate();
 };
 
-rocketindicatorcalculations.prototype.stochasticfast = function (data, params, series) {
+Rocketindicatorcalculations.prototype.stochasticfast = function (data, params, series) {
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Periods', type: 'int', value: 14};
-		this._params[1] = {name: 'Overbought Guideline', type: 'int', value: 80}; // TODO: Add min, max, step values
-		this._params[2] = {name: 'Oversold Guideline', type: 'int', value: 20};
-	}
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: rocketseries.seriesType.LINE, title: "SO Fast %K - " + this._params[0].value, color: 0xFF0000};
-		this._series[1] = {type: rocketseries.seriesType.LINE, title: "SO Fast %D - 3", color: 0x999999};
-	}
-	
-	this._constantLines = [];
-	this._constantLines[0] = {value: this._params[1].value, color: 0xFFFFFF};
-	this._constantLines[1] = {value: this._params[2].value, color: 0xFFFFFF};
-	
+
+	this._series = this._series || [
+		{type: 'line', title: "SO Fast %K - " + this._params[0].value, color: 0xFF0000},
+		{type: 'line', title: "SO Fast %D - 3", color: 0x999999}
+	];
+
+	this._params = this._params || [
+		{name: 'Periods', type: 'int', value: 14},
+		{name: 'Overbought Guideline', type: 'int', value: 80}, // TODO: Add min, max, step values
+		{name: 'Oversold Guideline', type: 'int', value: 20}
+	];
+
+	this._constantLines = this._constantLines || [
+		{value: this._params[1].value, color: 0xFFFFFF},
+		{value: this._params[2].value, color: 0xFFFFFF}
+	];
+
 	this.calculate = function(){
 		if (this._sourceData != null) {
 			var j = 0;
@@ -1553,28 +1380,25 @@ rocketindicatorcalculations.prototype.stochasticfast = function (data, params, s
 			this._data[0] = pKValues;
 			this._data[1] = pDValues;
 		}
-	}
+	};
 	
 	this.calculate();
 };
 
-rocketindicatorcalculations.prototype.parabolicsar = function (data, params, series) {
+Rocketindicatorcalculations.prototype.parabolicsar = function (data, params, series) {
 	this._params = params;
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: rocketseries.seriesType.DOT, title: "SAR", color: 0xFF0000};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Acceleration', type: 'float', value: 0.02};
-		this._params[1] = {name: 'Acceleration Ceiling', type: 'float', value: 0.2};
-	}
+
+	this._series = this._series || [
+		{type: 'dot', title: "SAR", color: 0xFF0000}
+	];
+
+	this._params = this._params || [
+		{name: 'Acceleration', type: 'float', value: 0.02},
+		{name: 'Acceleration Ceiling', type: 'float', value: 0.2}
+	];
 	
 	this.calculate = function(){
 		if (this._sourceData != null) {
@@ -1682,7 +1506,7 @@ rocketindicatorcalculations.prototype.parabolicsar = function (data, params, ser
 			}
 			
 		}
-	}
+	};
 	
 	this.calculate();
 };
@@ -1873,35 +1697,129 @@ function getPixel(imageData, x, y) {
     		b: imageData.data[index+2],
     		a: imageData.data[index+3]};
 }
+var fontPoints = [[{x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:5}, {x:3, y:6}],
+			[{x:2, y:0}, {x:4, y:0}, {x:2, y:1}, {x:4, y:1}],
+			[{x:2, y:1}, {x:4, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:2, y:3}, {x:4, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:3, y:1}, {x:5, y:1}, {x:1, y:2}, {x:3, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:4, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:2, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:5, y:2}, {x:1, y:3}, {x:4, y:3}, {x:1, y:4}, {x:4, y:4}, {x:1, y:5}, {x:4, y:5}, {x:2, y:6}, {x:3, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:2, y:1}],
+			[{x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:2, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:2, y:5}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:4, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}],
+			[{x:3, y:0}, {x:1, y:1}, {x:3, y:1}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:3, y:6}],
+			[{x:3, y:1}, {x:3, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:3, y:4}, {x:3, y:5}],
+			[{x:3, y:5}, {x:2, y:6}],
+			[{x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}],
+			[{x:3, y:5}, {x:3, y:6}],
+			[{x:5, y:0}, {x:4, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:2, y:5}, {x:1, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:3, y:0}, {x:2, y:1}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:5, y:2}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:1}, {x:5, y:2}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:4, y:0}, {x:1, y:1}, {x:4, y:1}, {x:1, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:4, y:4}, {x:4, y:5}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:2}, {x:2, y:3}, {x:2, y:5}, {x:2, y:6}],
+			[{x:3, y:2}, {x:3, y:3}, {x:3, y:5}, {x:2, y:6}],
+			[{x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:2, y:2}, {x:1, y:3}, {x:2, y:4}, {x:3, y:5}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:1}, {x:4, y:2}, {x:5, y:3}, {x:4, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:3, y:3}, {x:4, y:3}, {x:3, y:5}, {x:3, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:1, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:4, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:3, y:4}, {x:1, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}, {x:3, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:4, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:4, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:2, y:1}, {x:2, y:2}, {x:2, y:3}, {x:2, y:4}, {x:2, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:1}, {x:2, y:2}, {x:3, y:3}, {x:4, y:4}, {x:4, y:5}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:4, y:1}, {x:4, y:2}, {x:4, y:3}, {x:4, y:4}, {x:4, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:3, y:0}, {x:2, y:1}, {x:4, y:1}],
+			[{x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:4, y:0}, {x:3, y:1}, {x:0, y:6}, {x:1, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:5, y:0}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:2, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:2, y:3}, {x:2, y:4}, {x:2, y:5}, {x:2, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:3, y:0}, {x:4, y:0}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:3, y:0}, {x:4, y:0}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:5, y:6}],
+			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:4, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:1, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:2, y:2}, {x:4, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:1, y:6}, {x:3, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:3, y:0}, {x:3, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}, {x:3, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:4, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:2, y:3}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:2, y:2}, {x:1, y:3}, {x:2, y:3}, {x:2, y:4}, {x:3, y:5}, {x:4, y:6}, {x:5, y:6}],
+			[{x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:1}, {x:4, y:2}, {x:4, y:3}, {x:5, y:3}, {x:4, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}],
+			[{x:2, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:4, y:4}],
+			[]];
 
 function rasterText(imageData, text, x, y) {
 	var len = text.length;
 	var i = 0;
 	var code = 0;
 	var characterPixelLength = -1;
-	
+
 	var startX = x;
 	var startY = y;
-	
+
 	for (i=0; i < len; i++) {
 		code = text.charCodeAt(i) - 33;
 		if (code > -1) {
-			characterPixelLength = rocketcharts.fontPoints[code].length;
+			characterPixelLength = fontPoints[code].length;
 			
 			for (var j=0; j < characterPixelLength; j++) {
 				setPixel(imageData,
-						 startX + rocketcharts.fontPoints[code][j].x,
-						 startY + rocketcharts.fontPoints[code][j].y,
+						 startX + fontPoints[code][j].x,
+						 startY + fontPoints[code][j].y,
 						 255, 255, 255, 0xFF);
-			};
+			}
 		}
 		
 		startX += 6;
-	};
+	}
 }
 
-function randomInRange(minVal,maxVal)
-{
+function randomInRange(minVal,maxVal) {
   var randVal = minVal+(Math.random()*(maxVal-minVal));
   return randVal;
 }
@@ -1916,7 +1834,7 @@ function randomInRange(minVal,maxVal)
  * interest or skillset to develop a UI to manage indicators? Upon reflection, there are tons of use
  * cases where a skeleton ui would be advantageous 
  */
-function GenerateDialogs(element, indicators) {
+function GenerateDialogs(rocketchart, element, indicators) {
 	var addIndicatorDialog = "<div id=\"rocketcharts-addIndicator-dialog-form\" title=\"Add New Indicator\">" +
 	"<div id=\"tabs\">" +
 	"<ul>" +
@@ -1929,7 +1847,7 @@ function GenerateDialogs(element, indicators) {
 	
 	for (var i=0; i < indicators.length; i++) {
 	  addIndicatorDialog += "<option value=\"" + indicators[i].id + "\">" + indicators[i].name + "</option>";
-	};
+	}
 				
 	addIndicatorDialog += "</select><br />" + 
 				"<label for=\"rocketcharts-dataSource-select\">Data Source:</label>" +
@@ -1937,7 +1855,7 @@ function GenerateDialogs(element, indicators) {
 				"</select><br />" + 
 				"<div id=\"indicator-params\">";
 	
-	var calc = new rocketindicatorcalculations();
+	var calc = new Rocketindicatorcalculations();
 	var indicator = new calc["simplemovingaverage"]();
 				
 	for (var i=0; i < indicator._params.length; i++) {
@@ -1949,7 +1867,7 @@ function GenerateDialogs(element, indicators) {
 	  		break;
 	  }
 	  
-	};
+	}
 
 		addIndicatorDialog += "</div>" +
 			"</div>" +
@@ -1964,7 +1882,7 @@ function GenerateDialogs(element, indicators) {
 		$('.rocketcharts-input-int').spinner({ min: 0, max: 100, increment: 'fast' });
 		
 		$( "#rocketcharts-addIndicator-select" ).change(function(){
-			var calc = new rocketindicatorcalculations();
+			var calc = new Rocketindicatorcalculations();
 			var indicator = new calc[$(this).attr('value')]();
 			var indicatorMarkup = "";
 			
@@ -1985,7 +1903,7 @@ function GenerateDialogs(element, indicators) {
 			  		break;
 			  }
 			  						
-			};
+			}
 			
 			$( "#indicator-params" ).append(indicatorMarkup);
 			
@@ -2019,7 +1937,7 @@ function GenerateDialogs(element, indicators) {
 						params[params.length] = {value: parseInt($(this).attr("value"))};
 					});
 					
-					rocketcharts.addIndicator($( "#rocketcharts-addIndicator-select" ).attr("value"), 
+					rocketchart.addIndicator($( "#rocketcharts-addIndicator-select" ).attr("value"),
 											params,
 											parseInt($( "#rocketcharts-dataSource-select" ).attr("value")),
 											parseInt($( "#rocketcharts-panel-select" ).attr("value")));
@@ -2037,9 +1955,9 @@ function GenerateDialogs(element, indicators) {
 				$( "#rocketcharts-dataSource-select" ).empty();
 				var optionsMarkup = "";
 				
-				for (var i=0; i < rocketcharts.data.length; i++) {
-				  optionsMarkup += "<option value=\"" + i + "\">" + rocketcharts.data[i].title + "</option>";
-				};
+				for (var i=0; i < rocketchart.data.length; i++) {
+				  optionsMarkup += "<option value=\"" + i + "\">" + rocketchart.data[i].title + "</option>";
+				}
 				
 				$( "#rocketcharts-dataSource-select" ).append(optionsMarkup);
 				
@@ -2047,9 +1965,9 @@ function GenerateDialogs(element, indicators) {
 				$( "#rocketcharts-panel-select" ).empty();
 				optionsMarkup = "";
 				
-				for (var i=0; i < rocketcharts.panels.length; i++) {
+				for (var i=0; i < rocketchart.panels.length; i++) {
 				  optionsMarkup += "<option value=\"" + i + "\">Panel " + (i + 1) + "</option>";
-				};
+				}
 				
 				$( "#rocketcharts-panel-select" ).append("<option value=\"-1\">New Panel</option>");
 				$( "#rocketcharts-panel-select" ).append(optionsMarkup);
@@ -2083,13 +2001,7 @@ function intToHex(i) {
 }  
 
 function formatRate(value) {
-	var formattedString = "";
-	
-	if (value != null) {
-		formattedString = value.toFixed(4);
-	}
-	
-	return formattedString;
+	return !!value ? value.toFixed(4) : "";
 }
 
 function GeneratePriceHistory(){

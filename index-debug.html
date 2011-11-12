@@ -22,19 +22,20 @@
 
 <script type="text/javascript">
    $(document).ready(function () {    
- 
+
+      var rocketchart1 = new Rocketchart();
 		// Look and feel of the chart
-      var style = new Object();
+      var style = {};
       style.UpColor = {r: 0, g: 255, b: 0};
       style.DownColor = {r: 255, g: 0, b: 0};
  
 		// Settings
-      var settings = new Object();
+      var settings = {};
       settings.customUI = false;
       
       // User created indicator:
-		rocketcharts.indicators[rocketcharts.indicators.length] = {name: "Custom Indicator", id: "customindicator"};
-		rocketindicatorcalculations.prototype.customindicator = function (data, params, series) {
+		rocketchart1.indicators[rocketchart1.indicators.length] = {name: "Custom Indicator", id: "customindicator"};
+		Rocketindicatorcalculations.prototype.customindicator = function (data, params, series) {
 			this._params = params;
 			this._series = series;
 			this._sourceData = data;
@@ -42,7 +43,7 @@
 			
 			if (this._series == undefined){
 				this._series = [];
-				this._series[0] = {type: rocketseries.seriesType.LINE, title: "CUSTOM", color: 0xFF0000};
+				this._series[0] = {type: 'line', title: "CUSTOM", color: 0xFF0000};
 			}
 			
 			if (this._params == undefined){
@@ -77,12 +78,12 @@
 						total = 0;
 					}
 				}
-			}
+			};
 			
 			this.calculate();
 		};
  
-      rocketcharts.init(document.getElementById("rocketchart"), settings); 
+      rocketchart1.init(document.getElementById("rocketchart"), settings);
  
       var googData = [{date: "11/9/2010",open: 17.22,high: 17.6,low: 16.86,close: 16.97,volume: 56218900},
 		{date: "11/10/2010",open: 17,high: 17.01,low: 16.75,close: 16.94,volume: 17012600},
@@ -312,12 +313,16 @@
 		{date: "9/30/2011",open: 13.21,high: 13.44,low: 13.11,close: 13.17,volume: 30232800}];
 
 		// rocketcharts.addSeries(title, data, type, style, panel);
-		rocketcharts.addSeries("GOOG", googData, undefined, style);
+		rocketchart1.addSeries("GOOG", googData, undefined, style);
 		// rocketcharts.addIndicator(id, params, series, panel);
-		rocketcharts.addIndicator("parabolicsar", undefined, 0, 0);
-		rocketcharts.addIndicator("customindicator", undefined, 0, 0);
-		rocketcharts.addIndicator("movingaverageconvergencedivergence", undefined, 0);
+		rocketchart1.addIndicator("parabolicsar", undefined, 0, 0);
+		rocketchart1.addIndicator("customindicator", undefined, 0, 0);
+		rocketchart1.addIndicator("movingaverageconvergencedivergence", undefined, 0);
 
+        var rocketchart2 = new Rocketchart();
+        rocketchart2.init(document.getElementById("rocketchart2"), settings);
+        rocketchart2.addSeries("GOOG", googData, undefined, style);
+        rocketchart2.addIndicator("movingaverageconvergencedivergence", undefined, 0, 0);
 
 		$( "#chartButton" )
 			.button()
@@ -333,8 +338,9 @@
 
 <body>
 
-<div id="rocketchart" style="background-color: #000000; height: 90%; width: 75%; margin: 0 auto;"></div>
+<div id="rocketchart" style="background-color: #000000; height: 45%; width: 75%; margin: 0 auto;"></div>
 <br />
+<div id="rocketchart2" style="background-color: #000000; height: 40%; width: 75%; margin:0 auto; margin-top:12px"></div>
 <br />
 <button id="chartButton">Manage Chart</button>
 </body>
