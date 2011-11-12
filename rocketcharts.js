@@ -59,7 +59,7 @@ Rocketchart.prototype.init = function(element, settings){
 	self.width = self.element.width();
 	
 	self.element.append("<div id=\"panels\" style=\"height: 100%; width: 100%; position: relative;\"></div>");
-	var panelsElement = $("#panels");
+	var panelsElement = $("#panels", self.element);
 	
 	panelsElement.css("overflow", "auto");
 	panelsElement.css("margin", "0px");
@@ -118,14 +118,14 @@ Rocketchart.prototype.init = function(element, settings){
 		
 	if (self.settings.customUI !== true) {
 		// Add our windows for chart management:
-		GenerateDialogs(self.element, self.indicators);
+		GenerateDialogs(self, self.element, self.indicators);
 	}
 	
 	self.element.append("<div style=\"height: 15px; width: 100%; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" +
 							"<canvas id=\"dateAxisCanvas\" width=\"" + self.width + "\" height=\"15\"></canvas>" +
 						"</div>");
 	
-	self.dateAxisCanvas = document.getElementById("dateAxisCanvas");
+	self.dateAxisCanvas = $("#dateAxisCanvas", self.element).get(0);
 	
 	self.element.append("<div id=\"zoomSlider\" style=\"height: 15px; width: 100%; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" + "</div>");
 	
@@ -180,102 +180,6 @@ Rocketchart.prototype.init = function(element, settings){
 
 	fontImage.src = "bitmapfont.png";
 	*/
-	
-	self.fontPoints = [[{x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:5}, {x:3, y:6}],
-			[{x:2, y:0}, {x:4, y:0}, {x:2, y:1}, {x:4, y:1}], 
-			[{x:2, y:1}, {x:4, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:2, y:3}, {x:4, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:3, y:1}, {x:5, y:1}, {x:1, y:2}, {x:3, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:4, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:2, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:5, y:2}, {x:1, y:3}, {x:4, y:3}, {x:1, y:4}, {x:4, y:4}, {x:1, y:5}, {x:4, y:5}, {x:2, y:6}, {x:3, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:2, y:1}], 
-			[{x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:2, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:2, y:5}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:4, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}], 
-			[{x:3, y:0}, {x:1, y:1}, {x:3, y:1}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:3, y:6}], 
-			[{x:3, y:1}, {x:3, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:3, y:4}, {x:3, y:5}], 
-			[{x:3, y:5}, {x:2, y:6}], 
-			[{x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}], 
-			[{x:3, y:5}, {x:3, y:6}], 
-			[{x:5, y:0}, {x:4, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:2, y:5}, {x:1, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:3, y:0}, {x:2, y:1}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:5, y:2}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:1}, {x:5, y:2}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:4, y:0}, {x:1, y:1}, {x:4, y:1}, {x:1, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:4, y:4}, {x:4, y:5}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:2}, {x:2, y:3}, {x:2, y:5}, {x:2, y:6}], 
-			[{x:3, y:2}, {x:3, y:3}, {x:3, y:5}, {x:2, y:6}], 
-			[{x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:2, y:2}, {x:1, y:3}, {x:2, y:4}, {x:3, y:5}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:1}, {x:4, y:2}, {x:5, y:3}, {x:4, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:3, y:3}, {x:4, y:3}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:1, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:4, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:3, y:4}, {x:1, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}, {x:3, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:4, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:4, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:2, y:1}, {x:2, y:2}, {x:2, y:3}, {x:2, y:4}, {x:2, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:0}, {x:2, y:1}, {x:2, y:2}, {x:3, y:3}, {x:4, y:4}, {x:4, y:5}, {x:5, y:6}], 
-			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:4, y:1}, {x:4, y:2}, {x:4, y:3}, {x:4, y:4}, {x:4, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:3, y:0}, {x:2, y:1}, {x:4, y:1}], 
-			[{x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:4, y:0}, {x:3, y:1}, {x:0, y:6}, {x:1, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:5, y:0}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:2, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:2, y:3}, {x:2, y:4}, {x:2, y:5}, {x:2, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:3, y:0}, {x:4, y:0}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:3, y:0}, {x:4, y:0}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:4, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:1, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:2, y:2}, {x:4, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:1, y:6}, {x:3, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}], 
-			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:3, y:0}, {x:3, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}, {x:3, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:4, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:2, y:3}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:2, y:2}, {x:1, y:3}, {x:2, y:3}, {x:2, y:4}, {x:3, y:5}, {x:4, y:6}, {x:5, y:6}], 
-			[{x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}], 
-			[{x:1, y:0}, {x:2, y:0}, {x:3, y:1}, {x:4, y:2}, {x:4, y:3}, {x:5, y:3}, {x:4, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}], 
-			[{x:2, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:4, y:4}], 
-			[]];
 };
 
 /**
@@ -442,7 +346,7 @@ Rocketchart.prototype.addPanel = function(){
 		actualHeight = this.settings.minimumPanelHeight;
 	}
 	
-	var panelsElement = $("#panels");
+	var panelsElement = $("#panels", this.element);
 	
 	for (var i=0; i < this.panels.length; i++) {
 		
@@ -466,10 +370,10 @@ Rocketchart.prototype.addPanel = function(){
 	
 	// this.element.append
 	panelsElement.append('<canvas style="padding: 0px; margin: 0px; z-index: 0; position: absolute; left: 0px; top: ' + calcY + 'px;" id="panel' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
-	this.panels[panelID] = new Rocketpanel(document.getElementById("panel" + panelID), actualHeight, this);
+	this.panels[panelID] = new Rocketpanel($('#panel' + panelID, this.element).get(0), actualHeight, this);
 	
 	panelsElement.append('<canvas style="padding: 0px; margin: 0px; z-index: 1; position: absolute; left: 0px; top: ' + calcY + 'px;" id="panelOverlay' + panelID + '" width="' + (this.element.width() - 20) + '" height="' + actualHeight + '">rocketchart panel</canvas>');
-	this.panelOverlays[panelID] = document.getElementById("panelOverlay" + panelID);
+	this.panelOverlays[panelID] = $("#panelOverlay" + panelID, this.element).get(0);
 	
 	return panelID;
 };
@@ -521,7 +425,7 @@ Rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 	});
 	*/
 	
-	$("#zoomSlider").rangeSlider({
+	$("#zoomSlider", self.element).rangeSlider({
 		  defaultValues:{min:Math.round(data.length / 2), max:data.length - 1},
 		  bounds:{min:0, max:data.length - 1},
 		  wheelMode: null,
@@ -540,7 +444,7 @@ Rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 		  delayOut: 200
 		});
 	
-	$("#zoomSlider").bind("valuesChanging", function(event, ui){
+	$("#zoomSlider", self.element).bind("valuesChanging", function(event, ui){
 		self.view.startingPoint = Math.round(ui.values["min"]);
 		self.view.endingPoint = Math.round(ui.values["max"]) + 1;
 		self.draw();
@@ -711,7 +615,6 @@ Rocketchart.prototype.calculateSMA = function(periods, data) {
 	return returnArray;
 };
 
-var rocketcharts = new Rocketchart(); //TODO: Remove
 
 /**
  * Base class for our series
@@ -1140,7 +1043,6 @@ Rocketindicatorcalculations.prototype.simplemovingaverage = function (data, para
 	this._data = [];
 	
 	this._series = this._series || [{type: 'line', title: "SMA", color: 0xFF0000}];
-
 	this._params = this._params || [{name: 'Periods', type: 'int', value: 9}];
 	
 	this.calculate = function(){
@@ -1181,18 +1083,10 @@ Rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, pa
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: 'line', title: "WMA", color: 0xFF0000};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Periods', type: 'int', value: 9, min: 2, max: 200, step: 1};
-	}
-	
+
+	this._series = this._series || [{type: 'line', title: "WMA", color: 0xFF0000}];
+	this._params = this._params || [{name: 'Periods', type: 'int', value: 9, min: 2, max: 200, step: 1}];
+
 	this.calculate = function(){
 		if (this._sourceData != null) {
 			var total = 0;
@@ -1221,7 +1115,7 @@ Rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, pa
 				total = 0;
 			}
 		}
-	}
+	};
 	
 	this.calculate();
 };
@@ -1231,22 +1125,20 @@ Rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: 'histogram', title: "MACD Histogram", color: 0xFF0000};
-		this._series[1] = {type: 'line', title: "MACD Trigger", color: 0xFFFFFF};
-		this._series[2] = {type: 'line', title: "MACD", color: 0x666666};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Slow EMA Periods', type: 'int', value: 9};
-		this._params[1] = {name: 'Fast EMA Periods', type: 'int', value: 12};
-		this._params[2] = {name: 'Trigger EMA Periods', type: 'int', value: 9};
-	}
-	
+
+
+	this._series = this._series || [
+		{type: 'histogram', title: "MACD Histogram", color: 0xFF0000},
+		{type: 'line', title: "MACD Trigger", color: 0xFFFFFF},
+		{type: 'line', title: "MACD", color: 0x666666}
+	];
+
+	this._params = this._params || [
+		{name: 'Slow EMA Periods', type: 'int', value: 9},
+		{name: 'Fast EMA Periods', type: 'int', value: 12},
+		{name: 'Trigger EMA Periods', type: 'int', value: 9}
+	];
+
 	this.calculateEMA = function (data, periods) {
 		var returnArray = [];
 		var total = 0;
@@ -1279,7 +1171,7 @@ Rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 		}
 		
 		return returnArray;
-	}
+	};
 	
 	this.calculate = function(){
 		if (this._sourceData != null) {
@@ -1290,7 +1182,7 @@ Rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 			
 			for (i = 0; i < count; i++){
 				closeArray[i] = this._sourceData[i]["close"];
-			};
+			}
 			
 			/** STAGE 1: Calculate MACD Line */
 			
@@ -1337,7 +1229,7 @@ Rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 			this._data[2] = MACDValues;
 			
 		}
-	}
+	};
 	
 	this.calculate();
 };
@@ -1347,21 +1239,18 @@ Rocketindicatorcalculations.prototype.bollingerbands = function (data, params, s
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: 'line', title: "BB Upper", color: 0xFFFFFF};
-		this._series[1] = {type: 'line', title: "BB Middle", color: 0xFFFFFF};
-		this._series[2] = {type: 'line', title: "BB Lower", color: 0xFFFFFF};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Periods', type: 'int', value: 9};
-		this._params[1] = {name: 'Standard Deviations', type: 'int', value: 2};
-	}
-	
+
+	this._series = this._series || [
+		{type: 'line', title: "BB Upper", color: 0xFFFFFF},
+		{type: 'line', title: "BB Middle", color: 0xFFFFFF},
+		{type: 'line', title: "BB Lower", color: 0xFFFFFF}
+	];
+
+	this._params = this._params || [
+		{name: 'Periods', type: 'int', value: 9},
+		{name: 'Standard Deviations', type: 'int', value: 2}
+	];
+
 	this.calculate = function(){
 		if (this._sourceData != null) {
 			var total = 0;
@@ -1411,7 +1300,7 @@ Rocketindicatorcalculations.prototype.bollingerbands = function (data, params, s
 			this._data[1] = smaValues;
 			this._data[2] = lower;
 		}
-	}
+	};
 	
 	this.calculate();
 };
@@ -1421,25 +1310,23 @@ Rocketindicatorcalculations.prototype.stochasticfast = function (data, params, s
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Periods', type: 'int', value: 14};
-		this._params[1] = {name: 'Overbought Guideline', type: 'int', value: 80}; // TODO: Add min, max, step values
-		this._params[2] = {name: 'Oversold Guideline', type: 'int', value: 20};
-	}
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: 'line', title: "SO Fast %K - " + this._params[0].value, color: 0xFF0000};
-		this._series[1] = {type: 'line', title: "SO Fast %D - 3", color: 0x999999};
-	}
-	
-	this._constantLines = [];
-	this._constantLines[0] = {value: this._params[1].value, color: 0xFFFFFF};
-	this._constantLines[1] = {value: this._params[2].value, color: 0xFFFFFF};
-	
+
+	this._series = this._series || [
+		{type: 'line', title: "SO Fast %K - " + this._params[0].value, color: 0xFF0000},
+		{type: 'line', title: "SO Fast %D - 3", color: 0x999999}
+	];
+
+	this._params = this._params || [
+		{name: 'Periods', type: 'int', value: 14},
+		{name: 'Overbought Guideline', type: 'int', value: 80}, // TODO: Add min, max, step values
+		{name: 'Oversold Guideline', type: 'int', value: 20}
+	];
+
+	this._constantLines = this._constantLines || [
+		{value: this._params[1].value, color: 0xFFFFFF},
+		{value: this._params[2].value, color: 0xFFFFFF}
+	];
+
 	this.calculate = function(){
 		if (this._sourceData != null) {
 			var j = 0;
@@ -1493,7 +1380,7 @@ Rocketindicatorcalculations.prototype.stochasticfast = function (data, params, s
 			this._data[0] = pKValues;
 			this._data[1] = pDValues;
 		}
-	}
+	};
 	
 	this.calculate();
 };
@@ -1503,18 +1390,15 @@ Rocketindicatorcalculations.prototype.parabolicsar = function (data, params, ser
 	this._series = series;
 	this._sourceData = data;
 	this._data = [];
-	
-	if (this._series == undefined){
-		this._series = [];
-		this._series[0] = {type: 'dot', title: "SAR", color: 0xFF0000};
-	}
-	
-	if (this._params == undefined){
-		// Create default params, will also serve the purpose of declaring the parameters
-		this._params = [];
-		this._params[0] = {name: 'Acceleration', type: 'float', value: 0.02};
-		this._params[1] = {name: 'Acceleration Ceiling', type: 'float', value: 0.2};
-	}
+
+	this._series = this._series || [
+		{type: 'dot', title: "SAR", color: 0xFF0000}
+	];
+
+	this._params = this._params || [
+		{name: 'Acceleration', type: 'float', value: 0.02},
+		{name: 'Acceleration Ceiling', type: 'float', value: 0.2}
+	];
 	
 	this.calculate = function(){
 		if (this._sourceData != null) {
@@ -1622,7 +1506,7 @@ Rocketindicatorcalculations.prototype.parabolicsar = function (data, params, ser
 			}
 			
 		}
-	}
+	};
 	
 	this.calculate();
 };
@@ -1813,35 +1697,129 @@ function getPixel(imageData, x, y) {
     		b: imageData.data[index+2],
     		a: imageData.data[index+3]};
 }
+var fontPoints = [[{x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:5}, {x:3, y:6}],
+			[{x:2, y:0}, {x:4, y:0}, {x:2, y:1}, {x:4, y:1}],
+			[{x:2, y:1}, {x:4, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:2, y:3}, {x:4, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:3, y:1}, {x:5, y:1}, {x:1, y:2}, {x:3, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:4, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:2, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:5, y:2}, {x:1, y:3}, {x:4, y:3}, {x:1, y:4}, {x:4, y:4}, {x:1, y:5}, {x:4, y:5}, {x:2, y:6}, {x:3, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:2, y:1}],
+			[{x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:2, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:2, y:5}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:4, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}],
+			[{x:3, y:0}, {x:1, y:1}, {x:3, y:1}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:3, y:6}],
+			[{x:3, y:1}, {x:3, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:3, y:4}, {x:3, y:5}],
+			[{x:3, y:5}, {x:2, y:6}],
+			[{x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}],
+			[{x:3, y:5}, {x:3, y:6}],
+			[{x:5, y:0}, {x:4, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:2, y:5}, {x:1, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:3, y:0}, {x:2, y:1}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:5, y:2}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:1}, {x:5, y:2}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:4, y:0}, {x:1, y:1}, {x:4, y:1}, {x:1, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:4, y:4}, {x:4, y:5}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:2}, {x:2, y:3}, {x:2, y:5}, {x:2, y:6}],
+			[{x:3, y:2}, {x:3, y:3}, {x:3, y:5}, {x:2, y:6}],
+			[{x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:2, y:2}, {x:1, y:3}, {x:2, y:4}, {x:3, y:5}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:1}, {x:4, y:2}, {x:5, y:3}, {x:4, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:3, y:3}, {x:4, y:3}, {x:3, y:5}, {x:3, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:1, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:1, y:4}, {x:4, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:1, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:1, y:4}, {x:3, y:4}, {x:1, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:2, y:3}, {x:3, y:3}, {x:4, y:3}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}, {x:3, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:4, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:5, y:0}, {x:1, y:1}, {x:5, y:1}, {x:2, y:2}, {x:4, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:5, y:1}, {x:4, y:2}, {x:3, y:3}, {x:2, y:4}, {x:1, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:2, y:1}, {x:2, y:2}, {x:2, y:3}, {x:2, y:4}, {x:2, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:0}, {x:2, y:1}, {x:2, y:2}, {x:3, y:3}, {x:4, y:4}, {x:4, y:5}, {x:5, y:6}],
+			[{x:2, y:0}, {x:3, y:0}, {x:4, y:0}, {x:4, y:1}, {x:4, y:2}, {x:4, y:3}, {x:4, y:4}, {x:4, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:3, y:0}, {x:2, y:1}, {x:4, y:1}],
+			[{x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:4, y:0}, {x:3, y:1}, {x:0, y:6}, {x:1, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:5, y:0}, {x:5, y:1}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:4}, {x:1, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:3, y:0}, {x:4, y:0}, {x:5, y:0}, {x:2, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:2, y:3}, {x:2, y:4}, {x:2, y:5}, {x:2, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:3, y:0}, {x:4, y:0}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:3, y:0}, {x:4, y:0}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:5, y:3}, {x:5, y:4}, {x:5, y:5}, {x:5, y:6}],
+			[{x:1, y:0}, {x:1, y:1}, {x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:4, y:3}, {x:1, y:4}, {x:2, y:4}, {x:3, y:4}, {x:1, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:2, y:2}, {x:4, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:1, y:6}, {x:3, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:2, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:3}, {x:1, y:4}, {x:1, y:5}, {x:1, y:6}],
+			[{x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:1, y:3}, {x:2, y:4}, {x:3, y:4}, {x:4, y:4}, {x:5, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:3, y:0}, {x:3, y:1}, {x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:2, y:5}, {x:4, y:5}, {x:3, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:3, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:5, y:4}, {x:1, y:5}, {x:3, y:5}, {x:5, y:5}, {x:2, y:6}, {x:4, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:2, y:3}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:4, y:5}, {x:1, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:5, y:2}, {x:1, y:3}, {x:5, y:3}, {x:1, y:4}, {x:5, y:4}, {x:1, y:5}, {x:5, y:5}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:1, y:2}, {x:2, y:2}, {x:3, y:2}, {x:4, y:2}, {x:5, y:2}, {x:4, y:3}, {x:3, y:4}, {x:2, y:5}, {x:1, y:6}, {x:2, y:6}, {x:3, y:6}, {x:4, y:6}, {x:5, y:6}],
+			[{x:4, y:0}, {x:5, y:0}, {x:3, y:1}, {x:2, y:2}, {x:1, y:3}, {x:2, y:3}, {x:2, y:4}, {x:3, y:5}, {x:4, y:6}, {x:5, y:6}],
+			[{x:3, y:0}, {x:3, y:1}, {x:3, y:2}, {x:3, y:3}, {x:3, y:4}, {x:3, y:5}, {x:3, y:6}],
+			[{x:1, y:0}, {x:2, y:0}, {x:3, y:1}, {x:4, y:2}, {x:4, y:3}, {x:5, y:3}, {x:4, y:4}, {x:3, y:5}, {x:1, y:6}, {x:2, y:6}],
+			[{x:2, y:3}, {x:5, y:3}, {x:1, y:4}, {x:3, y:4}, {x:4, y:4}],
+			[]];
 
 function rasterText(imageData, text, x, y) {
 	var len = text.length;
 	var i = 0;
 	var code = 0;
 	var characterPixelLength = -1;
-	
+
 	var startX = x;
 	var startY = y;
-	
+
 	for (i=0; i < len; i++) {
 		code = text.charCodeAt(i) - 33;
 		if (code > -1) {
-			characterPixelLength = rocketcharts.fontPoints[code].length;
+			characterPixelLength = fontPoints[code].length;
 			
 			for (var j=0; j < characterPixelLength; j++) {
 				setPixel(imageData,
-						 startX + rocketcharts.fontPoints[code][j].x,
-						 startY + rocketcharts.fontPoints[code][j].y,
+						 startX + fontPoints[code][j].x,
+						 startY + fontPoints[code][j].y,
 						 255, 255, 255, 0xFF);
-			};
+			}
 		}
 		
 		startX += 6;
-	};
+	}
 }
 
-function randomInRange(minVal,maxVal)
-{
+function randomInRange(minVal,maxVal) {
   var randVal = minVal+(Math.random()*(maxVal-minVal));
   return randVal;
 }
@@ -1856,7 +1834,7 @@ function randomInRange(minVal,maxVal)
  * interest or skillset to develop a UI to manage indicators? Upon reflection, there are tons of use
  * cases where a skeleton ui would be advantageous 
  */
-function GenerateDialogs(element, indicators) {
+function GenerateDialogs(rocketchart, element, indicators) {
 	var addIndicatorDialog = "<div id=\"rocketcharts-addIndicator-dialog-form\" title=\"Add New Indicator\">" +
 	"<div id=\"tabs\">" +
 	"<ul>" +
@@ -1869,7 +1847,7 @@ function GenerateDialogs(element, indicators) {
 	
 	for (var i=0; i < indicators.length; i++) {
 	  addIndicatorDialog += "<option value=\"" + indicators[i].id + "\">" + indicators[i].name + "</option>";
-	};
+	}
 				
 	addIndicatorDialog += "</select><br />" + 
 				"<label for=\"rocketcharts-dataSource-select\">Data Source:</label>" +
@@ -1889,7 +1867,7 @@ function GenerateDialogs(element, indicators) {
 	  		break;
 	  }
 	  
-	};
+	}
 
 		addIndicatorDialog += "</div>" +
 			"</div>" +
@@ -1925,7 +1903,7 @@ function GenerateDialogs(element, indicators) {
 			  		break;
 			  }
 			  						
-			};
+			}
 			
 			$( "#indicator-params" ).append(indicatorMarkup);
 			
@@ -1959,7 +1937,7 @@ function GenerateDialogs(element, indicators) {
 						params[params.length] = {value: parseInt($(this).attr("value"))};
 					});
 					
-					rocketcharts.addIndicator($( "#rocketcharts-addIndicator-select" ).attr("value"), 
+					rocketchart.addIndicator($( "#rocketcharts-addIndicator-select" ).attr("value"),
 											params,
 											parseInt($( "#rocketcharts-dataSource-select" ).attr("value")),
 											parseInt($( "#rocketcharts-panel-select" ).attr("value")));
@@ -1977,9 +1955,9 @@ function GenerateDialogs(element, indicators) {
 				$( "#rocketcharts-dataSource-select" ).empty();
 				var optionsMarkup = "";
 				
-				for (var i=0; i < rocketcharts.data.length; i++) {
-				  optionsMarkup += "<option value=\"" + i + "\">" + rocketcharts.data[i].title + "</option>";
-				};
+				for (var i=0; i < rocketchart.data.length; i++) {
+				  optionsMarkup += "<option value=\"" + i + "\">" + rocketchart.data[i].title + "</option>";
+				}
 				
 				$( "#rocketcharts-dataSource-select" ).append(optionsMarkup);
 				
@@ -1987,9 +1965,9 @@ function GenerateDialogs(element, indicators) {
 				$( "#rocketcharts-panel-select" ).empty();
 				optionsMarkup = "";
 				
-				for (var i=0; i < rocketcharts.panels.length; i++) {
+				for (var i=0; i < rocketchart.panels.length; i++) {
 				  optionsMarkup += "<option value=\"" + i + "\">Panel " + (i + 1) + "</option>";
-				};
+				}
 				
 				$( "#rocketcharts-panel-select" ).append("<option value=\"-1\">New Panel</option>");
 				$( "#rocketcharts-panel-select" ).append(optionsMarkup);
@@ -2023,13 +2001,7 @@ function intToHex(i) {
 }  
 
 function formatRate(value) {
-	var formattedString = "";
-	
-	if (value != null) {
-		formattedString = value.toFixed(4);
-	}
-	
-	return formattedString;
+	return !!value ? value.toFixed(4) : "";
 }
 
 function GeneratePriceHistory(){
