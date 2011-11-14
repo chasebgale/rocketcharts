@@ -72,7 +72,6 @@ Rocketchart.prototype.init = function(element, settings){
 		self.draw();
 	});
 	
-	// Keeping this for future implementation of drag 'handles' via JQueryUI
 	panelsElement.bind( "resize", function(event, ui) {
 		self.resize(ui.size.width, ui.size.height);
 		self.draw();
@@ -84,7 +83,6 @@ Rocketchart.prototype.init = function(element, settings){
 		    var relativeY = event.pageY - this.offsetTop;
 			
 			self.headsUpDisplay(relativeX, relativeY);
-			//rocketcharts.draw();
 		});
 		this.style.cursor = 'crosshair';
 		
@@ -92,15 +90,13 @@ Rocketchart.prototype.init = function(element, settings){
 	    var relativeY = event.pageY - this.offsetTop;
 		
 		self.headsUpDisplay(relativeX, relativeY);
-		//self.draw();
+
 		return false; // Prevents browser from changing cursor to 'I-Beam', thinking we are trying to select text
 	});
 	panelsElement.bind("mouseup", function(event, ui) {
 		$(this).unbind( "mousemove" );
 		this.style.cursor = 'default';
-		self.mouseDown = false;
-		self.HUD = false;
-		//self.draw();
+
 		self.clearHUD();
 	});
 	
@@ -503,8 +499,7 @@ Rocketchart.prototype.draw = function(){
 	var self = this;
 	var height = 0;
 	
-	// For now displayedPoints = all ticks, in the future whatever zoom or view we have set
-	var displayedPoints = self.view.endingPoint - self.view.startingPoint; //this.data[0].data.length;
+	var displayedPoints = self.view.endingPoint - self.view.startingPoint;
 	var dateAxisWidth = self.width - self.priceAxisWidth;
 	self.view.horizontalPixelsPerPoint = dateAxisWidth / displayedPoints;
 	self.view.halfHorizontalPixelsPerPoint = Math.round(self.view.horizontalPixelsPerPoint / 2.0) - 1;
@@ -533,18 +528,12 @@ Rocketchart.prototype.draw = function(){
 	var context = self.dateAxisCanvas.getContext("2d");
 	var imageData = context.createImageData(self.width, 15);
 	
-	
-	
-	//var step = Math.floor(displayedPoints / Math.floor(dateAxisWidth / 150));
-	//var minorStep = Math.floor(step / 10); //Math.ceil(displayedPoints / (dateAxisWidth / 5));
-	
 	// Take the last date string, calculate it's width in pixels
 	// TODO: Perhaps calculate the average length to avoid one-off long or short strings?
 	var averageDateSpace = (self.data[0].data[displayedPoints - 1].date.length * 6) + 20;
 	
 	var minorStep = 4;
 	var majorStep = Math.ceil(averageDateSpace / (minorStep * self.view.horizontalPixelsPerPoint));
-	//var majorStep = Math.ceil(150 / (minorStep * horizontalPixelsPerPoint));
 	
 	var k = 0;
 	var tickCount = 0;
@@ -668,19 +657,10 @@ Rocketseries.prototype.candlesticks = function(imageData, verticalPixelPerPoint,
 	var yvalueLow;
 	var yvalueClose;
 	
-	var startTick = 0;//_sizing.StartingTick;
 	var horizSpacing = this.rocketchart.view.horizontalPixelsPerPoint;
 	var halfhorizSpacing = this.rocketchart.view.halfHorizontalPixelsPerPoint;
 	var lineAreaStart = h;
 	var X = halfhorizSpacing;
-	
-	//if (startTick < 0)
-	//	startTick = 0;
-	
-	//var dataCount = this.data.length; //_sizing.StartingTick + _sizing.VisibleTicks;
-	
-	//if (dataCount > _dataSource.length)
-	//	dataCount = _dataSource.length;
 	
 	var i = 0;
 	
