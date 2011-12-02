@@ -114,7 +114,7 @@ Rocketchart.prototype.init = function(element, settings){
 		
 	if (self.settings.customUI !== true) {
 		// Add our windows for chart management:
-		GenerateDialogs(self, self.element, self.indicators);
+		GenerateDialogs(self.element, self.indicators);
 	}
 	
 	self.element.append("<div style=\"height: 15px; width: 100%; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" +
@@ -374,6 +374,10 @@ Rocketchart.prototype.addPanel = function(){
 	return panelID;
 };
 
+Rocketchart.prototype.options = function() {
+	
+}
+
 /**
  * Adds a new primary series to the chart
  * @alias				rocketcharts.addSeries(title, data, type, panel)
@@ -484,8 +488,46 @@ Rocketchart.prototype.addIndicator = function(id, params, series, panel){
 Rocketchart.prototype.removeIndicator = function(id) {
 	this.panels[this.indicatorIndex[id].panel]._indicators.splice(this.indicatorIndex[id].indicator, 1);
 	this.indicatorIndex.splice(id, 1);
+	
+	this.refreshPanels();
 	this.draw();
 };
+
+Rocketchart.prototype.refreshPanels = function() {
+	var self = this,
+		i = 0,
+		simpleHeight = 0;
+	
+	// Check panels:
+	for (i=0; i < self.panels.length; i++) {
+
+		// Remove if empty:
+		if ((self.panels[i]._series.length == 0) && (self.panels[i]._indicators.length == 0)) {
+			$(self.panels[i]._canvas).remove();
+			$(self.panelOverlays[i]).remove();
+			
+			self.panels.splice(i, 1);
+			self.panelOverlays.splice(i, 1);
+			
+			// Set the iterator back one to account for the shift taking place in the arrays
+			i--;
+		}
+	}
+	
+	// Resize panels:
+	simpleHeight = Math.floor(self.element.height() / self.panels.length) - 1;
+	
+	for (i=0; i < self.panels.length; i++) {
+
+		// update the width and height of the canvas
+		self.panels[i]._canvas.setAttribute("height", simpleHeight);
+		self.panels[i]._canvas.style.top = simpleHeight * i;
+		
+		self.panelOverlays[i].setAttribute("height", simpleHeight);
+		self.panelOverlays[i].style.top = simpleHeight * i;
+		
+	}
+}
 
 
 /**
@@ -822,6 +864,14 @@ function Rocketindicator(rocketchart, id, data, params, series){
 	var calc = new Rocketindicatorcalculations();
 	this.rocketchart = rocketchart;
 	this._indicator = new calc[id](data, params, series);
+	
+	// TODO: Better lookup?
+	for(var i=0; i<rocketchart.indicators.length; i++) {
+		if (rocketchart.indicators[i].id == id) {
+			this.name = rocketchart.indicators[i].name;
+			break;
+		}
+	}
 }
 
 Rocketindicator.prototype.draw = function(imageData, verticalPixelPerPoint, gridMin, w, h){
@@ -1023,7 +1073,7 @@ Rocketindicatorcalculations.prototype.simplemovingaverage = function (data, para
 	this._data = [];
 	
 	this._series = this._series || [{type: 'line', title: "SMA", color: 0xFF0000}];
-	this._params = this._params || [{name: 'Periods', type: 'int', value: 9}];
+	this._params = this._params || [{name: 'Periods', type: 'numeric', value: 9, step: 1, min: 1, max: 100}];
 	
 	this.calculate = function(){
 		if (this._sourceData != null) {
@@ -1065,7 +1115,7 @@ Rocketindicatorcalculations.prototype.weightedmovingaverage = function (data, pa
 	this._data = [];
 
 	this._series = this._series || [{type: 'line', title: "WMA", color: 0xFF0000}];
-	this._params = this._params || [{name: 'Periods', type: 'int', value: 9, min: 2, max: 200, step: 1}];
+	this._params = this._params || [{name: 'Periods', type: 'numeric', value: 9, min: 2, max: 200, step: 1}];
 
 	this.calculate = function(){
 		if (this._sourceData != null) {
@@ -1114,9 +1164,9 @@ Rocketindicatorcalculations.prototype.movingaverageconvergencedivergence = funct
 	];
 
 	this._params = this._params || [
-		{name: 'Slow EMA Periods', type: 'int', value: 9},
-		{name: 'Fast EMA Periods', type: 'int', value: 12},
-		{name: 'Trigger EMA Periods', type: 'int', value: 9}
+		{name: 'Slow EMA Periods', type: 'numeric', value: 9, step: 1, min: 1, max: 100},
+		{name: 'Fast EMA Periods', type: 'numeric', value: 12, step: 1, min: 1, max: 100},
+		{name: 'Trigger EMA Periods', type: 'numeric', value: 9, step: 1, min: 1, max: 100}
 	];
 
 	this.calculateEMA = function (data, periods) {
@@ -1227,8 +1277,8 @@ Rocketindicatorcalculations.prototype.bollingerbands = function (data, params, s
 	];
 
 	this._params = this._params || [
-		{name: 'Periods', type: 'int', value: 9},
-		{name: 'Standard Deviations', type: 'int', value: 2}
+		{name: 'Periods', type: 'numeric', value: 9, step: 1, min: 1, max: 100},
+		{name: 'Standard Deviations', type: 'numeric', value: 2, step: 1, min: 1, max: 100}
 	];
 
 	this.calculate = function(){
@@ -1298,8 +1348,8 @@ Rocketindicatorcalculations.prototype.stochasticfast = function (data, params, s
 
 	this._params = this._params || [
 		{name: 'Periods', type: 'int', value: 14},
-		{name: 'Overbought Guideline', type: 'int', value: 80}, // TODO: Add min, max, step values
-		{name: 'Oversold Guideline', type: 'int', value: 20}
+		{name: 'Overbought Guideline', type: 'numeric', value: 80, step: 1, min: 50, max: 100}, // TODO: Add min, max, step values
+		{name: 'Oversold Guideline', type: 'numeric', value: 20, step: 1, min: 0, max: 50}
 	];
 
 	this._constantLines = this._constantLines || [
@@ -1376,8 +1426,8 @@ Rocketindicatorcalculations.prototype.parabolicsar = function (data, params, ser
 	];
 
 	this._params = this._params || [
-		{name: 'Acceleration', type: 'float', value: 0.02},
-		{name: 'Acceleration Ceiling', type: 'float', value: 0.2}
+		{name: 'Acceleration', type: 'numeric', value: 0.02, step: 0.01, min: 0.01, max: 1.0},
+		{name: 'Acceleration Ceiling', type: 'numeric', value: 0.2, step: 0.1, min: 0.1, max: 10}
 	];
 	
 	this.calculate = function(){
@@ -1804,6 +1854,7 @@ function randomInRange(minVal,maxVal) {
   return randVal;
 }
 
+
 /*
  * TODO: I am debating this functionality being included in the library...
  * Really, we should just have the methods to add indicators/series/etc and have
@@ -1814,22 +1865,76 @@ function randomInRange(minVal,maxVal) {
  * interest or skillset to develop a UI to manage indicators? Upon reflection, there are tons of use
  * cases where a skeleton ui would be advantageous 
  */
-function GenerateDialogs(rocketchart, element, indicators) {
-	var addIndicatorDialog = "<div id=\"rocketcharts-addIndicator-dialog-form\" title=\"Add New Indicator\">" +
+function GenerateDialogs(element, indicators) {
+	
+	/// Templates:
+	
+	/* Name:	seriesStyleTemplate
+	 * Output:	Markup to style the elements of a series, i.e. color, line thickness, etc
+	 * Input:	ex: {type: 'line', title: "SO Fast %D - 3", color: 0x999999} 
+	 */
+	
+	/* TODO: jQuery discontinued the template engine, look to use "jsrender" instead?
+	$.template("seriesStyleTemplate",
+			   "<div><input type=\"text\" value=\"${title}\"\></div>"
+			  );
+	*/
+	
+	/*
+	<div id="rocketcharts-manage-dialog" style="display: none;">
+		<div id="rocketcharts-manage-dialog-tabs" style="height: 300px;">
+			<ul>
+				<li><a href="#tabs-1">Technical Analysis</a></li>
+				<li><a href="#tabs-2">Appearance</a></li>
+			</ul>
+			<div id="tabs-1">
+				<div id="rocketcharts-manage-dialog-indicator-tree" style="width: 35%; float: left;">
+				</div>
+				<div id="rocketcharts-manage-dialog-indicator-form" style="width: 65%; float: left;">
+				</div>
+				<br style="clear: left;" />
+			</div>
+			<div id="tabs-2">
+			</div>
+		</div>
+	</div>
+	*/
+	
+	/// Dialog shell:
+	var indicatorDialog = ['<div id="rocketcharts-manage-dialog" style="display: none;">',
+	                       '<div id="rocketcharts-manage-dialog-tabs" style="height: 300px;">',
+	                       '<ul>',
+	                       '<li><a href="#tabs-1">Technical Analysis</a></li>',
+	                       '<li><a href="#tabs-2">Appearance</a></li>',
+	                       '</ul>',
+	                       '<div id="tabs-1">',
+	                       '<div id="rocketcharts-manage-dialog-indicator-tree" style="width: 35%; float: left;"></div>',
+	                       '<div id="rocketcharts-manage-dialog-indicator-form" style="width: 65%; float: left;"></div>',
+	                       '<br style="clear: left;" />',
+	                       '</div>',
+	                       '<div id="tabs-2"></div>',
+	                       '</div>',
+	                       '</div>'];
+	
+	$(element).prepend(indicatorDialog.join(''));
+	
+	/*
+	
+	var indicatorDialog = "<div id=\"rocketcharts-dialog-form\" title=\"Manage Rocketchart...\" style=\"display: none;\">" +
 	"<div id=\"tabs\">" +
-	"<ul>" +
-		"<li><a href=\"#tabs-1\">Nuts & Bolts</a></li>" +
-		"<li><a href=\"#tabs-2\">Appearance</a></li>" +
-	"</ul>" +
-			"<div id=\"tabs-1\">" +
-				"<label for=\"rocketcharts-addIndicator-select\">Type:</label>" +
-				"<select id=\"rocketcharts-addIndicator-select\">";
+		"<ul>" +
+			"<li><a href=\"#tabs-1\">Technical Analysis</a></li>" +
+			"<li><a href=\"#tabs-2\">Appearance</a></li>" +
+		"</ul>" +
+		"<div id=\"tabs-1\">" +
+			"<label for=\"rocketcharts-addIndicator-select\">Type:</label>" +
+			"<select id=\"rocketcharts-addIndicator-select\">";
 	
 	for (var i=0; i < indicators.length; i++) {
-	  addIndicatorDialog += "<option value=\"" + indicators[i].id + "\">" + indicators[i].name + "</option>";
+		indicatorDialog += "<option value=\"" + indicators[i].id + "\">" + indicators[i].name + "</option>";
 	}
 				
-	addIndicatorDialog += "</select><br />" + 
+	indicatorDialog += "</select><br />" + 
 				"<label for=\"rocketcharts-dataSource-select\">Data Source:</label>" +
 				"<select id=\"rocketcharts-dataSource-select\">" +
 				"</select><br />" + 
@@ -1839,122 +1944,208 @@ function GenerateDialogs(rocketchart, element, indicators) {
 	var indicator = new calc["simplemovingaverage"]();
 				
 	for (var i=0; i < indicator._params.length; i++) {
-	  addIndicatorDialog += "<label for=\"param" + i + "\">" + indicator._params[i].name + "</label>";
+		indicatorDialog += "<label for=\"param" + i + "\">" + indicator._params[i].name + "</label>";
 	  
 	  switch (indicator._params[i].type) {
 	  	case "int":
-	  		addIndicatorDialog += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+	  		indicatorDialog += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
 	  		break;
 	  }
 	  
 	}
 
-		addIndicatorDialog += "</div>" +
-			"</div>" +
-			"<div id=\"tabs-2\">" +
-				"<label for=\"rocketcharts-panel-select\">Panel:</label>" +
-				"<select id=\"rocketcharts-panel-select\">" +
-			"</div>" +
-		"</div>";
+	indicatorDialog += "</div>" +
+		"</div>" +
+		"<div id=\"tabs-2\">" +
+			"<label for=\"rocketcharts-panel-select\">Panel:</label>" +
+			"<select id=\"rocketcharts-panel-select\">" +
+		"</div>" +
+	"</div>";
+	
+	$(element).prepend(indicatorDialog);
+	
+	$('.rocketcharts-input-int').spinner({ min: 0, max: 100, increment: 'fast' });
+	
+	$( "#rocketcharts-addIndicator-select" ).change(function(){
+		var calc = new Rocketindicatorcalculations();
+		var indicator = new calc[$(this).attr('value')]();
+		var indicatorMarkup = "";
 		
-		$(element).prepend(addIndicatorDialog);
+		$( "#indicator-params" ).empty();
 		
-		$('.rocketcharts-input-int').spinner({ min: 0, max: 100, increment: 'fast' });
+		for (var i=0; i < indicator._params.length; i++) {
+		  indicatorMarkup += "<label for=\"param" + i + "\">" + indicator._params[i].name + "</label>";
+		  
+		  switch (indicator._params[i].type) {
+		  	case "numeric":
+		  		indicatorMarkup += "<input class=\"rocketcharts-input-numeric\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+		  		break;
+		  	default:
+		  		indicatorMarkup += "<input type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
+		  		break;
+		  }
+		  						
+		}
 		
-		$( "#rocketcharts-addIndicator-select" ).change(function(){
-			var calc = new Rocketindicatorcalculations();
-			var indicator = new calc[$(this).attr('value')]();
-			var indicatorMarkup = "";
+		$( "#indicator-params" ).append(indicatorMarkup);
+		
+		$('.rocketcharts-input-int').spinner({ min: 0, max: 100, step: 1 });
+		
+		var precision = 0;
+		var stepString = "0.";
+		$('.rocketcharts-input-numeric').each(function (i) {
+			stepString = "0.";
+			precision = $(this).attr('value').split('.')[1].length - 1;
+			for (var i=0; i < precision; i++) {
+				stepString = stepString + "0";
+			}
+			stepString = stepString + "1";
+			$(this).spinner({min: 0, max: 100, step: stepString});
+		});
+		//$('.rocketcharts-input-float').spinner({ min: 0, max: 100, step: 0.1 });
+		
+	});
+	
+	$( "#rocketcharts-addIndicator-dialog-form" ).dialog({
+		autoOpen: false,
+		height: 400,
+		width: 500,
+		modal: true,
+		buttons: {
+			"Add Indicator": function() {
+				var params = [];
+				$("#indicator-params input").each(function(i,e) {
+					
+					params[params.length] = {value: parseInt($(this).attr("value"))};
+				});
+				
+				rocketchart.addIndicator($( "#rocketcharts-addIndicator-select" ).attr("value"),
+										params,
+										parseInt($( "#rocketcharts-dataSource-select" ).attr("value")),
+										parseInt($( "#rocketcharts-panel-select" ).attr("value")));
+				
+				$( this ).dialog( "close" );
+			},
+			Cancel: function() {
+				$( this ).dialog( "close" );
+			}
+		},
+		close: function() {
+			//allFields.val( "" ).removeClass( "ui-state-error" );
+		},
+		open: function () {
+			$( "#rocketcharts-dataSource-select" ).empty();
+			var optionsMarkup = "";
 			
-			$( "#indicator-params" ).empty();
-			
-			for (var i=0; i < indicator._params.length; i++) {
-			  indicatorMarkup += "<label for=\"param" + i + "\">" + indicator._params[i].name + "</label>";
-			  
-			  switch (indicator._params[i].type) {
-			  	case "int":
-			  		indicatorMarkup += "<input class=\"rocketcharts-input-int\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
-			  		break;
-			  	case "float":
-			  		indicatorMarkup += "<input class=\"rocketcharts-input-float\" type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
-			  		break;
-			  	default:
-			  		indicatorMarkup += "<input type=\"text\" name=\"param" + i + "\" value=\"" + indicator._params[i].value + "\"><br />";
-			  		break;
-			  }
-			  						
+			for (var i=0; i < rocketchart.data.length; i++) {
+			  optionsMarkup += "<option value=\"" + i + "\">" + rocketchart.data[i].title + "</option>";
 			}
 			
-			$( "#indicator-params" ).append(indicatorMarkup);
+			$( "#rocketcharts-dataSource-select" ).append(optionsMarkup);
 			
-			$('.rocketcharts-input-int').spinner({ min: 0, max: 100, step: 1 });
 			
-			var precision = 0;
-			var stepString = "0.";
-			$('.rocketcharts-input-float').each(function (i) {
-				stepString = "0.";
-				precision = $(this).attr('value').split('.')[1].length - 1;
-				for (var i=0; i < precision; i++) {
-					stepString = stepString + "0";
-				}
-				stepString = stepString + "1";
-				$(this).spinner({min: 0, max: 100, step: stepString});
-			});
-			//$('.rocketcharts-input-float').spinner({ min: 0, max: 100, step: 0.1 });
+			$( "#rocketcharts-panel-select" ).empty();
+			optionsMarkup = "";
 			
-		});
-		
-		$( "#rocketcharts-addIndicator-dialog-form" ).dialog({
-			autoOpen: false,
-			height: 400,
-			width: 500,
-			modal: true,
-			buttons: {
-				"Add Indicator": function() {
-					var params = [];
-					$("#indicator-params input").each(function(i,e) {
-						
-						params[params.length] = {value: parseInt($(this).attr("value"))};
-					});
-					
-					rocketchart.addIndicator($( "#rocketcharts-addIndicator-select" ).attr("value"),
-											params,
-											parseInt($( "#rocketcharts-dataSource-select" ).attr("value")),
-											parseInt($( "#rocketcharts-panel-select" ).attr("value")));
-					
-					$( this ).dialog( "close" );
-				},
-				Cancel: function() {
-					$( this ).dialog( "close" );
-				}
-			},
-			close: function() {
-				//allFields.val( "" ).removeClass( "ui-state-error" );
-			},
-			open: function () {
-				$( "#rocketcharts-dataSource-select" ).empty();
-				var optionsMarkup = "";
-				
-				for (var i=0; i < rocketchart.data.length; i++) {
-				  optionsMarkup += "<option value=\"" + i + "\">" + rocketchart.data[i].title + "</option>";
-				}
-				
-				$( "#rocketcharts-dataSource-select" ).append(optionsMarkup);
-				
-				
-				$( "#rocketcharts-panel-select" ).empty();
-				optionsMarkup = "";
-				
-				for (var i=0; i < rocketchart.panels.length; i++) {
-				  optionsMarkup += "<option value=\"" + i + "\">Panel " + (i + 1) + "</option>";
-				}
-				
-				$( "#rocketcharts-panel-select" ).append("<option value=\"-1\">New Panel</option>");
-				$( "#rocketcharts-panel-select" ).append(optionsMarkup);
-				
-				$('#tabs').tabs();
+			for (var i=0; i < rocketchart.panels.length; i++) {
+			  optionsMarkup += "<option value=\"" + i + "\">Panel " + (i + 1) + "</option>";
 			}
-		});
+			
+			$( "#rocketcharts-panel-select" ).append("<option value=\"-1\">New Panel</option>");
+			$( "#rocketcharts-panel-select" ).append(optionsMarkup);
+			
+			$('#tabs').tabs();
+		}
+	});
+	
+	*/
+	
+	$("#rocketcharts-manage-dialog-indicator-tree").dynatree({
+		minExpandLevel: 2,
+        dnd: {
+	      preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
+	      onDragStart: function(node) {
+	        /** This function MUST be defined to enable dragging for the tree.
+	         *  Return false to cancel dragging of node.
+	         */
+	        return true;
+		  },
+	      onDragEnter: function(node, sourceNode) {
+	        /** sourceNode may be null for non-dynatree droppables.
+	         *  Return false to disallow dropping on node. In this case
+	         *  onDragOver and onDragLeave are not called.
+	         *  Return 'over', 'before, or 'after' to force a hitMode.
+	         *  Return ['before', 'after'] to restrict available hitModes.
+	         *  Any other return value will calc the hitMode from the cursor position.
+	         */
+	        // Prevent dropping a parent below another parent (only sort
+	        // nodes under the same parent)
+	        if (node.parent.span != null) {
+		        if(node.parent.data.title.indexOf("Panel") < 0)
+		        	return false;
+	        } else {
+	        	return false;
+	        }
+	        // Don't allow dropping *over* a node (would create a child)
+	        return ["before", "after"];
+	      },
+	      onDrop: function(node, sourceNode, hitMode, ui, draggable) {
+	        /** This function MUST be defined to enable dropping of items on
+	         *  the tree.
+	         */
+	         if (node.parent.span != null) {
+		        if(node.parent.data.title.indexOf("Panel") < 0)
+		        	return false;
+	        } else {
+	        	return false;
+	        }
+	        
+	        chart.panels[node.data.panelID]._indicators.push( chart.panels[sourceNode.data.panelID]._indicators.splice(sourceNode.data.indicatorID, 1)[0] );
+	        
+	        sourceNode.move(node, hitMode);
+	        
+	        chart.refreshPanels();
+	        chart.draw();
+	      }
+	    }
+	});
+	
+	
+	$( "#rocketcharts-manage-dialog" ).dialog({
+		autoOpen: false,
+		height: 400,
+		width: 750,
+		modal: true,
+		buttons: {
+		},
+		close: function() {
+			//allFields.val( "" ).removeClass( "ui-state-error" );
+		},
+		open: function () {
+			$('#rocketcharts-manage-dialog-tabs').tabs();
+			
+			var i = 0,
+				j = 0,
+				panelIndicators = [];
+			
+			var chart = $(this).data('rocketchart');
+			var tree = $("#rocketcharts-manage-dialog-indicator-tree").dynatree("getTree");
+			
+			tree.getRoot().removeChildren();
+				
+			for (i = 0; i < chart.panels.length; i++) {
+				panelIndicators = [];
+				for (j = 0; j < chart.panels[i]._indicators.length; j++) {
+					panelIndicators[panelIndicators.length] = {title: chart.panels[i]._indicators[j].name, panelID: i, indicatorID: j};
+				}
+				tree.getRoot().addChild({title: "Panel " + (i + 1), isFolder: true, expand: true, children: panelIndicators});
+			}
+			
+		}
+	});
+	
+	
+	
 }
 
 function hexToRgb(hex) {
