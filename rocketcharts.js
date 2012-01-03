@@ -858,7 +858,7 @@ Rocketpanel.prototype.calculate = function(){
 	
 	this._verticalPixelsPerPoint = this._height / (this._gridMax - this._gridMin);
 	
-	if (this.settings.debug) {
+	if (this.rocketchart.settings.debug) {
 		console.log("Calculate called, _height: " + this._height + ", _verticalPixelsPerPoint: " + this._verticalPixelsPerPoint)
 	}
 };
