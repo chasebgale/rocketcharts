@@ -115,7 +115,7 @@ Rocketchart.prototype.init = function(element, settings){
 		
 	if (self.settings.customUI !== true) {
 		// Add our windows for chart management:
-		GenerateDialogs(self.element, self.indicators);
+		GenerateDialogs(self.element, self.indicators, self.settings.debug);
 	}
 	
 	self.element.append("<div style=\"height: 15px; width: 100%; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" +
@@ -1870,7 +1870,7 @@ function randomInRange(minVal,maxVal) {
  * interest or skillset to develop a UI to manage indicators? Upon reflection, there are tons of use
  * cases where a skeleton ui would be advantageous 
  */
-function GenerateDialogs(element, indicators) {
+function GenerateDialogs(element, indicators, debug) {
 	
 	/// Templates:
 	
@@ -2066,6 +2066,7 @@ function GenerateDialogs(element, indicators) {
 	*/
 	
 	$("#rocketcharts-manage-dialog-indicator-tree").dynatree({
+		debugLevel: (debug ? 3 : 0),
 		minExpandLevel: 2,
         dnd: {
 	      preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
