@@ -26,6 +26,7 @@ function Rocketchart() {
 	this.priceAxisWidth = 75;
 					   
 	this.settings = {
+		debug: false,
 		minimumPanelHeight:200,
 		defaultUpColor:"#00EAFF",
 		defaultDownColor:"#005F6B",
@@ -555,8 +556,10 @@ Rocketchart.prototype.draw = function(){
 		// read the height of the canvas
 		height = parseInt(self.panels[i]._canvas.getAttribute("height"));
 		
-		console.log("draw called, width: " + self.width + " height: " + height);
-		
+		if (self.settings.debug) {
+			console.log("draw called, width: " + self.width + " height: " + height);
+		}
+
 		// create a new pixel array
 		var imageData = context.createImageData(self.width, height);
 		
@@ -855,7 +858,9 @@ Rocketpanel.prototype.calculate = function(){
 	
 	this._verticalPixelsPerPoint = this._height / (this._gridMax - this._gridMin);
 	
-	console.log("Calculate called, _height: " + this._height + ", _verticalPixelsPerPoint: " + this._verticalPixelsPerPoint)
+	if (this.settings.debug) {
+		console.log("Calculate called, _height: " + this._height + ", _verticalPixelsPerPoint: " + this._verticalPixelsPerPoint)
+	}
 };
 
 // id = lookup in public indicator array
