@@ -26,6 +26,7 @@ function Rocketchart() {
 	this.priceAxisWidth = 75;
 					   
 	this.settings = {
+		debug: false,
 		minimumPanelHeight:200,
 		defaultUpColor:"#00EAFF",
 		defaultDownColor:"#005F6B",
@@ -114,7 +115,7 @@ Rocketchart.prototype.init = function(element, settings){
 		
 	if (self.settings.customUI !== true) {
 		// Add our windows for chart management:
-		GenerateDialogs(self.element, self.indicators);
+		GenerateDialogs(self.element, self.indicators, self.settings.debug);
 	}
 	
 	self.element.append("<div style=\"height: 15px; width: 100%; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" +
@@ -555,8 +556,10 @@ Rocketchart.prototype.draw = function(){
 		// read the height of the canvas
 		height = parseInt(self.panels[i]._canvas.getAttribute("height"));
 		
-		console.log("draw called, width: " + self.width + " height: " + height);
-		
+		if (self.settings.debug) {
+			console.log("draw called, width: " + self.width + " height: " + height);
+		}
+
 		// create a new pixel array
 		var imageData = context.createImageData(self.width, height);
 		
@@ -855,7 +858,9 @@ Rocketpanel.prototype.calculate = function(){
 	
 	this._verticalPixelsPerPoint = this._height / (this._gridMax - this._gridMin);
 	
-	console.log("Calculate called, _height: " + this._height + ", _verticalPixelsPerPoint: " + this._verticalPixelsPerPoint)
+	if (this.rocketchart.settings.debug) {
+		console.log("Calculate called, _height: " + this._height + ", _verticalPixelsPerPoint: " + this._verticalPixelsPerPoint)
+	}
 };
 
 // id = lookup in public indicator array
@@ -1865,7 +1870,7 @@ function randomInRange(minVal,maxVal) {
  * interest or skillset to develop a UI to manage indicators? Upon reflection, there are tons of use
  * cases where a skeleton ui would be advantageous 
  */
-function GenerateDialogs(element, indicators) {
+function GenerateDialogs(element, indicators, debug) {
 	
 	/// Templates:
 	
@@ -2061,6 +2066,7 @@ function GenerateDialogs(element, indicators) {
 	*/
 	
 	$("#rocketcharts-manage-dialog-indicator-tree").dynatree({
+		debugLevel: (debug ? 3 : 0),
 		minExpandLevel: 2,
         dnd: {
 	      preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
