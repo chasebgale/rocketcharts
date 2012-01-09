@@ -69,7 +69,7 @@ Rocketchart.prototype.init = function(element, settings){
 	
 	
 	$(window).resize(function() {
-		self.resize(self.element.context.clientWidth, self.element.context.clientHeight);
+		//self.resize($(self.element.context).innerWidth(), $(self.element.context).innerHeight());
 		self.draw();
 	});
 	
