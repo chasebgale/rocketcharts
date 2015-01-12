@@ -1,4 +1,6 @@
 ![rocketchart](https://github.com/chasebgale/rocketcharts/raw/master/docs/chart.png)
+
+![rocketchart HUD](https://github.com/chasebgale/rocketcharts/raw/master/docs/chart_hud.png)
   
 #### Rocketcharts
 
