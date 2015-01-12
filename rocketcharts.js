@@ -114,7 +114,7 @@ Rocketchart.prototype.init = function(element, settings){
 	if (self.settings.resizable)
 		self.element.resizable();
 	
-	self.element.append("<div style=\"height: 15px; width: 100%; position: absolute; bottom: 0; z-index: 2; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" +
+	self.element.append("<div style=\"height: 15px; font-size: 1em; line-height: 1em; width: 100%; position: absolute; bottom: 0; z-index: 2; background-color: " + rgbToHex(self.settings.backgroundColor.r, self.settings.backgroundColor.g, self.settings.backgroundColor.b) + ";\">" +
 							"<canvas id=\"dateAxisCanvas\" width=\"" + self.width + "\" height=\"15\"></canvas>" +
 						"</div>");
 	
