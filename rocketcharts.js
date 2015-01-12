@@ -354,45 +354,6 @@ Rocketchart.prototype.addSeries = function(title, data, type, style, panel){
 	self.view.startingPoint = Math.round(data.length / 2);
 	self.view.endingPoint = data.length;
 	
-	/* OLD JQUERY UI SLIDER
-	$("#zoomSlider").slider({
-		range: true,
-		min: 0,
-		max: data.length,
-		values: [ Math.round(data.length / 2), data.length ],
-		slide: function( event, ui ) {
-			rocketcharts.view.startingPoint = ui.values[ 0 ];
-			rocketcharts.view.endingPoint = ui.values[ 1 ];
-			rocketcharts.draw();
-		}
-	});
-	*/
-	
-	$("#zoomSlider", self.element).rangeSlider({
-		  defaultValues:{min:Math.round(data.length / 2), max:data.length - 1},
-		  bounds:{min:0, max:data.length - 1},
-		  wheelMode: null,
-		  wheelSpeed: 8,
-		  arrows: true,
-		  valueLabels: "change",
-		  formatter: function(value){
-			  if (self.data.length > 0) {
-				  return self.data[0].data[Math.round(value)].date;
-			  } else {
-				  return Math.round(value);
-			  }
-		  },
-		  durationIn: 0,
-		  durationOut: 400,
-		  delayOut: 200
-		});
-	
-	$("#zoomSlider", self.element).bind("valuesChanging", function(event, ui){
-		self.view.startingPoint = Math.round(ui.values["min"]);
-		self.view.endingPoint = Math.round(ui.values["max"]) + 1;
-		self.draw();
-	});
-	
 	self.draw();
 };
 
