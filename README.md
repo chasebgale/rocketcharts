@@ -1,3 +1,4 @@
+<pre>
                     *     .--.
                          / /  `   
         +               | |       
@@ -17,7 +18,8 @@
       jgs _..--"""````"""--.._
     _.-'``                    ``'-._
   -'                                '-
-
+</pre>
+  
 Rocketcharts
 Licensed under GPLv3 (http://www.opensource.org/licenses/gpl-3.0.html)
 Authored by Chase Gale (http://chasegale.com)
