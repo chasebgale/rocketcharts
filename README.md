@@ -20,8 +20,10 @@
   -'                                '-
 </pre>
   
-Rocketcharts
+#### Rocketcharts
+
 Licensed under GPLv3 (http://www.opensource.org/licenses/gpl-3.0.html)
+
 Authored by Chase Gale (http://chasegale.com)
 
 Demo and breakdown: http://chasegale.com/2011/10/21/Introducing-Rocketcharts-Open-source-HTML5-Financial-Statistical-Charts/
