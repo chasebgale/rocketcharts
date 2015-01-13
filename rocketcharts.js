@@ -68,13 +68,10 @@ Rocketchart.prototype.init = function(element, settings){
     panelsElement.css("padding", "0");
 	
 	$(window).resize(function() {
+        self.resize(self.element.width(), self.element.height());
 		self.draw();
 	});
 	
-	panelsElement.bind( "resize", function(event, ui) {
-		self.resize(ui.size.width, ui.size.height);
-		self.draw();
-	});
 	panelsElement.bind("mousedown", function(event, ui) {
 		$(this).bind( "mousemove", function(event, ui) {
 			
