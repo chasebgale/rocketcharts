@@ -77,7 +77,7 @@ Rocketchart.prototype.init = function(element, settings){
 			
 			var rect = self.panels[0]._canvas.getBoundingClientRect(); 
             var relativeX = event.pageX - rect.left;
-            var relativeY = event.pageY - rect.top;
+            var relativeY = event.pageY - self.element.offset().top;
             
             self.headsUpDisplay(relativeX, relativeY);
         
@@ -86,7 +86,7 @@ Rocketchart.prototype.init = function(element, settings){
 		
         var rect = self.panels[0]._canvas.getBoundingClientRect(); 
 		var relativeX = event.pageX - rect.left;
-	    var relativeY = event.pageY - rect.top;
+	    var relativeY = event.pageY - self.element.offset().top;
 		
 		self.headsUpDisplay(relativeX, relativeY);
 
