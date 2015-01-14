@@ -139,6 +139,10 @@ Rocketchart.prototype.resize = function(w, h){
 	self.dateAxisCanvas.setAttribute("width", w);
 	var simpleHeight = Math.floor(h / self.panels.length) - 1;
 	
+	if (simpleHeight < self.settings.minimumPanelHeight) {
+		simpleHeight = self.settings.minimumPanelHeight;
+	}
+	
 	for (var i=0; i < self.panels.length; i++) {
 		
 		/*
