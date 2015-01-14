@@ -77,7 +77,7 @@ Rocketchart.prototype.init = function(element, settings){
 			
 			var rect = self.panels[0]._canvas.getBoundingClientRect(); 
             var relativeX = event.pageX - rect.left;
-            var relativeY = event.pageY - self.element.offset().top;
+            var relativeY = event.pageY - self.element.offset().top + $(this).scrollTop();
             
             self.headsUpDisplay(relativeX, relativeY);
         
@@ -86,7 +86,7 @@ Rocketchart.prototype.init = function(element, settings){
 		
         var rect = self.panels[0]._canvas.getBoundingClientRect(); 
 		var relativeX = event.pageX - rect.left;
-	    var relativeY = event.pageY - self.element.offset().top;
+	    var relativeY = event.pageY - self.element.offset().top + $(this).scrollTop();
 		
 		self.headsUpDisplay(relativeX, relativeY);
 
@@ -381,6 +381,7 @@ Rocketchart.prototype.addIndicator = function(id, params, series, panel){
 	
 	indicatorID = this.panels[panelID].addIndicator(new Rocketindicator(this, id, this.data[series].data, params));
 	this.indicatorIndex[this.indicatorIndex.length] = {panel: panelID, indicator: indicatorID};
+	this.refreshPanels();
 	this.draw();
 	
 	return (this.indicatorIndex.length - 1);
@@ -417,6 +418,10 @@ Rocketchart.prototype.refreshPanels = function() {
 	
 	// Resize panels:
 	simpleHeight = Math.floor(self.element.height() / self.panels.length) - 1;
+	
+	if (simpleHeight < this.settings.minimumPanelHeight) {
+		simpleHeight = this.settings.minimumPanelHeight;
+	}
 	
 	for (i=0; i < self.panels.length; i++) {
 
