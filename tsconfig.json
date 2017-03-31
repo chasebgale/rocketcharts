@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"noImplicitAny": true,
+		"target": "es5",
+		"moduleResolution": "node",
+		"emitDecoratorMetadata": true,
+    "experimentalDecorators": true
+	},
+	"exclude": [
+    "node_modules"
+  ],
+  "types" : [
+    "core-js"
+  ]
+}
