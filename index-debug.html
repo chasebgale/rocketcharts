@@ -5,20 +5,27 @@
 <script type="text/javascript" src="rocketcharts.js"></script>
 
 <script type="text/javascript">
-   $(document).ready(function () {    
-
-      var rocketchart1 = new Rocketchart();
-		// Look and feel of the chart
-      var style = {};
-      style.UpColor = {r: 0, g: 255, b: 0};
-      style.DownColor = {r: 255, g: 0, b: 0};
- 
-      // Settings
-      var settings = {};
-      settings.customUI = false;
-      
-      // User created indicator:
-		rocketchart1.indicators[rocketchart1.indicators.length] = {name: "Custom Indicator", id: "customindicator"};
+  $(document).ready(function () {    
+    
+    var chart = new Rocketchart();
+		
+    // Look and feel of the chart
+    var style = {
+      UpColor:    {r: 0, g: 255, b: 0},
+      DownColor:  {r: 255, g: 0, b: 0}
+    };
+    
+    // Settings
+    var settings = {
+      customUI: false
+    };
+    
+    // Add a custom indicator
+		chart.indicators.push({
+      name: "Custom Indicator", 
+      id: "customindicator"
+    });
+    
 		Rocketindicatorcalculations.prototype.customindicator = function (data, params, series) {
 			this._params = params;
 			this._series = series;
@@ -67,7 +74,7 @@
 			this.calculate();
 		};
  
-      rocketchart1.init(document.getElementById("rocketchart"));
+      chart.init(document.getElementById("rocketchart"));
  
       var googData = [{date: "11/9/2010",open: 17.22,high: 17.6,low: 16.86,close: 16.97,volume: 56218900},
 		{date: "11/10/2010",open: 17,high: 17.01,low: 16.75,close: 16.94,volume: 17012600},
@@ -297,13 +304,13 @@
 		{date: "9/30/2011",open: 13.21,high: 13.44,low: 13.11,close: 13.17,volume: 30232800}];
 
 		// rocketcharts.addSeries(title, data, type, style, panel);
-		rocketchart1.addSeries("GOOG", googData, undefined, style);
+		chart.addSeries("GOOG", googData, undefined, style);
 		// rocketcharts.addIndicator(id, params, series, panel);
-		rocketchart1.addIndicator("parabolicsar", undefined, 0, 0);
-		rocketchart1.addIndicator("customindicator", undefined, 0, 0);
-		rocketchart1.addIndicator("bollingerbands", undefined, 0);
-		rocketchart1.addIndicator("movingaverageconvergencedivergence", undefined, 0);
-		rocketchart1.addIndicator("movingaverageconvergencedivergence", undefined, 0);
+		chart.addIndicator("parabolicsar", undefined, 0, 0);
+		chart.addIndicator("customindicator", undefined, 0, 0);
+		chart.addIndicator("bollingerbands", undefined, 0);
+		chart.addIndicator("movingaverageconvergencedivergence", undefined, 0);
+		chart.addIndicator("movingaverageconvergencedivergence", undefined, 0);
 		
         var rocketchart2 = new Rocketchart();
         rocketchart2.init(document.getElementById("rocketchart2"), settings);
@@ -311,7 +318,6 @@
         rocketchart2.addIndicator("movingaverageconvergencedivergence", undefined, 0);
 
 }); 
-// ]]>
 </script>
 </head>
 
