@@ -1628,7 +1628,7 @@ function setPixelBlend(imageData, x, y, r, g, b, a) {
     var index = (parseInt(x) + parseInt(y) * imageData.width) * 4;
     var newAlpha = a / 255.0;
   
-  imageData.data[index+0] = (1.0 - newAlpha) * r + newAlpha * imageData.data[index+0];
+    imageData.data[index+0] = (1.0 - newAlpha) * r + newAlpha * imageData.data[index+0];
     imageData.data[index+1] = (1.0 - newAlpha) * g + newAlpha * imageData.data[index+1];
     imageData.data[index+2] = (1.0 - newAlpha) * b + newAlpha * imageData.data[index+2];
     imageData.data[index+3] = 255.0;

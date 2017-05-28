@@ -26,22 +26,11 @@ gulp.task('cleaning', function() {
   return del(['build']);
 });
 
-gulp.task('bundle required', ['bundle types'], function () {
-  return browserify()
-	.require(dependencies)
-  .bundle()
-  .on('error', handleErrors)
-  .pipe(source('required.js'))
-  .pipe(gulp.dest('build')); //.pipe(replace(/[^\u0000-\u007E]/g, ''))
-});
-
 gulp.task('typescript compilation', ['cleaning'], function() {
 	var tsResult = gulp.src(['src/**/*.ts'])
 	.pipe(typescript({
-		allowJs: true,
 		target: 'ES5',
-    module: 'commonjs',
-    moduleResolution: 'node',
+    module: 'None',
     experimentalDecorators: true,
     emitDecoratorMetadata: true,
     declaration: true
@@ -49,31 +38,14 @@ gulp.task('typescript compilation', ['cleaning'], function() {
 
   return merge([
     tsResult.dts.pipe(gulp.dest('build/types')),
-    tsResult.js.pipe(gulp.dest('build/compiled'))
+    tsResult.js.pipe(gulp.dest('build'))
   ]);
 });
 
-gulp.task('bundle core', ['tests'], function () {
-  // Browserfy only needs the entry point to the app as it will
-  // crawl dependencies and bundle on it's own
-  return browserify('build/compiled/main.js')
-  .external(dependencies)
-  .bundle()
-  .on('error', handleErrors)
-  .pipe(source('core.js'))
-  .pipe(gulp.dest('build'));
-});
-
-gulp.task('bundle types', ['bundle core'], function () {
-  return gulp.src('./build/types/*.ts')
-  .pipe(concat('core.d.ts'))
-  .pipe(gulp.dest('./build/'));
-});
-
 gulp.task('minify all', ['bundle required', 'bundle core'], function () {
-	gulp.src(['build/core.js'])
+	gulp.src(['build/rocketcharts.js'])
 	.pipe(uglify())
-	.pipe(concat('core.min.js'))
+	.pipe(concat('rocketcharts.min.js'))
 	.pipe(gulp.dest('build'));
 
 	return gulp.src(['build/required.js'])
@@ -84,9 +56,6 @@ gulp.task('minify all', ['bundle required', 'bundle core'], function () {
 
 gulp.task('default', [
   'cleaning',  
-  'typescript compilation',
-  'bundle core',
-  'bundle types',
-  'bundle required', 
-  'minify all'
+  'typescript compilation' /*,
+  'minify all' */
 ]);
